@@ -111,6 +111,8 @@ export async function POST(req: NextRequest) {
         priority: is_mandatory ? 'high' : 'normal',
         category: 'update',
         action_url: download_url.trim(),
+        version_name: version_name.trim(),
+        version_code: code,
         created_by: 'admin',
       });
     }

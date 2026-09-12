@@ -16,6 +16,8 @@ export async function sendInternalPush(data: {
   priority?: string;
   category?: string;
   action_url?: string | null;
+  version_name?: string | null;
+  version_code?: number | null;
   scheduled_at?: string | null;
   created_by?: string;
 }) {

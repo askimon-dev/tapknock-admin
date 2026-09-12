@@ -28,6 +28,8 @@ export async function POST(
       priority: release.is_mandatory ? 'high' : 'normal',
       category: 'update',
       action_url: release.download_url,
+      version_name: release.version_name,
+      version_code: release.version_code,
       created_by: 'admin',
     });
 
