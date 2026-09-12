@@ -17,7 +17,9 @@ import {
   Menu,
   X,
   ExternalLink,
+  Smartphone,
 } from 'lucide-react';
+import TapKnockLogo from '@/components/TapKnockLogo';
 
 interface NavItem {
   label: string;
@@ -29,6 +31,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: 'Overview & Analytics', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Push Notifications', href: '/dashboard/notifications', icon: BellRing, badge: 'Crucial' },
+  { label: 'App Versions', href: '/dashboard/versions', icon: Smartphone, badge: 'Releases' },
   { label: 'Users & Accounts', href: '/dashboard/users', icon: Users },
   { label: 'Doors & QR Kits', href: '/dashboard/doors', icon: DoorClosed },
   { label: 'Rings & Call Audit', href: '/dashboard/rings', icon: PhoneCall },
@@ -74,10 +77,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen bg-surface-darkest flex flex-col md:flex-row text-slate-100">
       {/* Mobile Header */}
       <div className="md:hidden flex items-center justify-between px-4 py-3 bg-surface-card border-b border-surface-border">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center font-bold text-white shadow-md">
-            TK
-          </div>
+        <div className="flex items-center gap-2.5">
+          <TapKnockLogo size={28} />
           <span className="font-semibold text-white tracking-tight">TapKnock Admin</span>
         </div>
         <button
@@ -97,9 +98,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Sidebar Brand */}
         <div className="p-5 border-b border-surface-border flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center font-bold text-white shadow-md shadow-brand-500/20 ring-2 ring-brand-500/20">
-              TK
-            </div>
+            <TapKnockLogo size={36} />
             <div>
               <div className="font-bold text-white tracking-tight text-sm flex items-center gap-1.5">
                 TapKnock <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-400">Admin</span>

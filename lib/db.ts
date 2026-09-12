@@ -23,6 +23,8 @@ if (process.env.NODE_ENV !== 'production') {
   global._pgPool = pool;
 }
 
+export const getPool = () => pool;
+
 export async function query<T = any>(text: string, params: any[] = []): Promise<T[]> {
   const start = Date.now();
   const res = await pool.query(text, params);

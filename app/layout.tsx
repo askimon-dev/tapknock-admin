@@ -5,7 +5,13 @@ export const metadata: Metadata = {
   title: 'TapKnock • Admin Console & Analytics',
   description: 'Manage TapKnock smart doorbell system, track live activity, and dispatch targeted push notifications',
   icons: {
-    icon: '/favicon.ico',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon.png', type: 'image/png', sizes: '192x192' },
+      { url: '/logo.svg', type: 'image/svg+xml' },
+    ],
+    apple: '/icon.png',
+    shortcut: '/favicon.ico',
   },
 };
 

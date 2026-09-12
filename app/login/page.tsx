@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShieldCheck, Lock, ArrowRight, Bell, Zap, Database } from 'lucide-react';
+import TapKnockLogo from '@/components/TapKnockLogo';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -49,8 +50,8 @@ export default function LoginPage() {
         <div className="bg-surface-card border border-surface-border rounded-2xl p-8 shadow-2xl backdrop-blur-xl">
           {/* Logo & Header */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 shadow-lg shadow-brand-500/25 mb-4 ring-4 ring-brand-500/10">
-              <ShieldCheck className="w-9 h-9 text-white" />
+            <div className="flex justify-center mb-4">
+              <TapKnockLogo size={64} />
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-white flex items-center justify-center gap-2">
               TapKnock <span className="text-xs uppercase tracking-widest bg-brand-500/20 text-brand-400 px-2 py-0.5 rounded font-semibold border border-brand-500/30">Console</span>

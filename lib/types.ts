@@ -126,3 +126,20 @@ export interface DashboardMetrics {
   outcomesBreakdown: { name: string; count: number; color: string }[];
   hourlyActivity: { hour: string; count: number }[];
 }
+
+export interface AppRelease {
+  id: string;
+  version_name: string;
+  version_code: number;
+  platform: 'android' | 'ios' | 'all';
+  release_type: 'playstore' | 'drive' | 'apk' | 'direct_link' | 'other';
+  download_url: string;
+  title: string;
+  release_notes: string | null;
+  is_mandatory: number;
+  min_supported_version_code: number;
+  is_active: number;
+  download_count: number;
+  created_at: string;
+  published_at: string | null;
+}
