@@ -572,7 +572,7 @@ export default function PushNotificationsPage() {
                     <div className="w-4 h-4 rounded-md bg-brand-600 flex items-center justify-center font-bold text-[9px] text-white">
                       TK
                     </div>
-                    <span className="font-semibold text-slate-200">TAPKNOCK</span>
+                    <span className="font-semibold text-slate-200">TapKnock</span>
                   </div>
                   <span className="text-[10px] text-slate-400">now</span>
                 </div>
