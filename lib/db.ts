@@ -39,3 +39,33 @@ export async function queryOne<T = any>(text: string, params: any[] = []): Promi
   const rows = await query<T>(text, params);
   return rows[0] || null;
 }
+
+// Staging Database Pool
+let _stagingPool: Pool | undefined;
+export function getStagingPool(): Pool {
+  if (!_stagingPool) {
+    const baseConn =
+      process.env.DATABASE_URL ||
+      'postgresql://tapknock:tapknock@localhost:5432/tapknock';
+    const stagingConn = baseConn.replace(/\/tapknock(\?.*)?$/, '/tapknock_staging$1');
+    _stagingPool = new Pool({
+      connectionString: stagingConn,
+      max: 5,
+      idleTimeoutMillis: 15000,
+      connectionTimeoutMillis: 3000,
+    });
+  }
+  return _stagingPool;
+}
+
+export async function queryStaging<T = any>(text: string, params: any[] = []): Promise<T[]> {
+  const p = getStagingPool();
+  const res = await p.query(text, params);
+  return res.rows as T[];
+}
+
+export async function queryStagingOne<T = any>(text: string, params: any[] = []): Promise<T | null> {
+  const rows = await queryStaging<T>(text, params);
+  return rows[0] || null;
+}
+

@@ -18,6 +18,7 @@ import {
   X,
   ExternalLink,
   Smartphone,
+  Cpu,
 } from 'lucide-react';
 import TapKnockLogo from '@/components/TapKnockLogo';
 
@@ -32,6 +33,7 @@ const navItems: NavItem[] = [
   { label: 'Overview & Analytics', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Push Notifications', href: '/dashboard/notifications', icon: BellRing, badge: 'Crucial' },
   { label: 'App Versions', href: '/dashboard/versions', icon: Smartphone, badge: 'Releases' },
+  { label: 'Staging Server', href: '/dashboard/staging', icon: Cpu, badge: 'On-Demand' },
   { label: 'Users & Accounts', href: '/dashboard/users', icon: Users },
   { label: 'Doors & QR Kits', href: '/dashboard/doors', icon: DoorClosed },
   { label: 'Rings & Call Audit', href: '/dashboard/rings', icon: PhoneCall },
