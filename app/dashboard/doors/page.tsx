@@ -177,11 +177,13 @@ export default function DoorsPage() {
                 {/* Header */}
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h3 className="font-bold text-white text-base truncate">
+                    <h3 className="font-bold text-slate-900 dark:text-white text-base truncate">
                       {door.display_name || door.label}
                     </h3>
-                    <div className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
-                      <span className="font-mono text-brand-400 font-semibold">{door.public_code || 'No code'}</span>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-1">
+                      <span className="font-mono text-brand-700 dark:text-brand-400 font-semibold bg-brand-50 dark:bg-brand-500/10 px-1.5 py-0.5 rounded border border-brand-200 dark:border-brand-500/20 text-[11px]">
+                        {door.public_code || 'No code'}
+                      </span>
                       <span>•</span>
                       <span>{door.label}</span>
                     </div>
@@ -190,8 +192,8 @@ export default function DoorsPage() {
                   <span
                     className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
                       isActive
-                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                        : 'bg-red-500/10 text-red-400 border border-red-500/30'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30'
+                        : 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/30'
                     }`}
                   >
                     {isActive ? 'Active' : 'Paused'}
@@ -199,29 +201,29 @@ export default function DoorsPage() {
                 </div>
 
                 {/* Owner & Address */}
-                <div className="space-y-1.5 py-3 border-y border-surface-border text-xs text-slate-400">
+                <div className="space-y-1.5 py-3 border-y border-surface-border text-xs text-slate-500 dark:text-slate-400">
                   <div className="flex items-center justify-between">
                     <span>Owner:</span>
-                    <span className="font-medium text-slate-300 truncate max-w-[160px]">
+                    <span className="font-semibold text-slate-800 dark:text-slate-300 truncate max-w-[160px]">
                       {door.owner_name || door.owner_email || 'Unknown'}
                     </span>
                   </div>
                   {door.address_line && (
                     <div className="flex items-center justify-between">
                       <span>Address:</span>
-                      <span className="text-slate-300 truncate max-w-[160px]">{door.address_line}</span>
+                      <span className="text-slate-800 dark:text-slate-300 truncate max-w-[160px] font-medium">{door.address_line}</span>
                     </div>
                   )}
                   <div className="flex items-center justify-between">
                     <span>Geofence Radius:</span>
-                    <span className="text-slate-300">{door.radius_m || 150}m</span>
+                    <span className="text-slate-800 dark:text-slate-300 font-medium">{door.radius_m || 150}m</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Ring Duration:</span>
-                    <span className="text-slate-300">{door.ring_seconds || 30}s</span>
+                    <span className="text-slate-800 dark:text-slate-300 font-medium">{door.ring_seconds || 30}s</span>
                   </div>
                   {door.auto_reply && (
-                    <div className="pt-1 text-[11px] text-amber-400/90 italic">
+                    <div className="pt-1 text-[11px] text-amber-700 dark:text-amber-400 font-medium italic">
                       Auto-reply: &quot;{door.auto_reply}&quot;
                     </div>
                   )}
@@ -232,15 +234,15 @@ export default function DoorsPage() {
               <div className="mt-4 pt-3 flex items-center justify-between gap-2">
                 <button
                   onClick={() => handleOpenQr(door)}
-                  className="flex-1 py-1.5 px-3 bg-surface-darker hover:bg-surface-border text-slate-300 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 border border-surface-border transition-colors cursor-pointer"
+                  className="flex-1 py-1.5 px-3 bg-surface-card hover:bg-surface-darker text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 border border-surface-border transition-colors cursor-pointer shadow-sm"
                 >
-                  <QrCode className="w-3.5 h-3.5 text-brand-400" />
+                  <QrCode className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
                   <span>View QR</span>
                 </button>
 
                 <button
                   onClick={() => handleSimulateRing(door)}
-                  className="py-1.5 px-3 bg-brand-600/10 hover:bg-brand-600/20 text-brand-400 border border-brand-500/30 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  className="py-1.5 px-3 bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 dark:bg-brand-600/10 dark:hover:bg-brand-600/20 dark:text-brand-400 dark:border-brand-500/30 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-sm"
                 >
                   <PhoneCall className="w-3.5 h-3.5" />
                   <span>Test Ring</span>
@@ -248,10 +250,10 @@ export default function DoorsPage() {
 
                 <button
                   onClick={() => togglePauseResume(door)}
-                  className={`py-1.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer ${
+                  className={`py-1.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer shadow-sm ${
                     isActive
-                      ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                      : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                      ? 'bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30'
+                      : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30'
                   }`}
                 >
                   {isActive ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}

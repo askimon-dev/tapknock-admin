@@ -79,18 +79,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   return (
-    <div className="min-h-screen bg-surface-darkest flex flex-col md:flex-row text-slate-100">
+    <div className="min-h-screen bg-surface-darkest flex flex-col md:flex-row text-slate-800 dark:text-slate-100">
       {/* Mobile Header */}
       <div className="md:hidden flex items-center justify-between px-4 py-3 bg-surface-card border-b border-surface-border">
         <div className="flex items-center gap-2.5">
           <TapKnockLogo size={28} />
-          <span className="font-semibold text-white tracking-tight">TapKnock Admin</span>
+          <span className="font-bold text-slate-900 dark:text-white tracking-tight">TapKnock Admin</span>
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-surface-darker"
+            className="p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white rounded-lg hover:bg-surface-darker"
           >
             {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -108,10 +108,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="flex items-center gap-3">
             <TapKnockLogo size={36} />
             <div>
-              <div className="font-bold text-white tracking-tight text-sm flex items-center gap-1.5">
-                TapKnock <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-400">Admin</span>
+              <div className="font-bold text-slate-900 dark:text-white tracking-tight text-sm flex items-center gap-1.5">
+                TapKnock <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-brand-50 text-brand-700 border border-brand-200 dark:bg-brand-500/20 dark:text-brand-400 dark:border-brand-500/30">Admin</span>
               </div>
-              <div className="text-[11px] text-slate-400 flex items-center gap-1">
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span>PostgreSQL 16</span>
               </div>
@@ -123,10 +123,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="px-4 pt-4 pb-2">
           <a
             href="/dashboard/notifications"
-            className="w-full py-2 px-3 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shadow-lg shadow-brand-600/20 transition-all cursor-pointer"
+            className="w-full py-2.5 px-3 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white keep-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shadow-md shadow-brand-600/20 transition-all cursor-pointer"
           >
-            <Send className="w-3.5 h-3.5" />
-            <span>Dispatch Push</span>
+            <Send className="w-3.5 h-3.5 text-white" />
+            <span className="text-white">Dispatch Push</span>
           </a>
         </div>
 
@@ -140,22 +140,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
-                className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all ${
+                className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                   isActive
-                    ? 'bg-brand-600 text-white shadow-md shadow-brand-600/25'
-                    : 'text-slate-400 hover:text-white hover:bg-surface-darker/70'
+                    ? 'bg-brand-600 text-white shadow-md shadow-brand-600/25 keep-white'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-surface-darker/70'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`} />
                   <span>{item.label}</span>
                 </div>
                 {item.badge && (
                   <span
-                    className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${
+                    className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
                       isActive
-                        ? 'bg-white/20 text-white'
-                        : 'bg-brand-500/20 text-brand-400 border border-brand-500/30'
+                        ? 'bg-white/25 text-white border border-white/20 keep-white'
+                        : 'bg-brand-50 text-brand-700 border border-brand-200 dark:bg-brand-500/20 dark:text-brand-400 dark:border-brand-500/30'
                     }`}
                   >
                     {item.badge}
@@ -168,24 +168,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Live Status Widget in Sidebar Footer */}
         <div className="p-3 mx-3 mb-3 bg-surface-darker rounded-xl border border-surface-border text-xs">
-          <div className="flex items-center justify-between text-slate-400 mb-1.5">
-            <span className="text-[11px] font-medium uppercase tracking-wider flex items-center gap-1.5 text-slate-300">
-              <Radio className="w-3 h-3 text-emerald-400 animate-pulse" />
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1.5">
+            <span className="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+              <Radio className="w-3 h-3 text-emerald-500 animate-pulse" />
               Signaling Gateway
             </span>
-            <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/20">
+            <span className="text-[10px] text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-400 font-bold dark:bg-emerald-500/10 px-1.5 py-0.2 rounded border dark:border-emerald-500/20">
               Active
             </span>
           </div>
-          <div className="flex items-center justify-between text-[11px] text-slate-400">
+          <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400">
             <span>Online Devices:</span>
-            <span className="font-semibold text-white">
+            <span className="font-bold text-slate-900 dark:text-white">
               {liveStats ? liveStats.online_devices : '1'}
             </span>
           </div>
-          <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1">
+          <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400 mt-1">
             <span>Registered Accounts:</span>
-            <span className="font-semibold text-white">
+            <span className="font-bold text-slate-900 dark:text-white">
               {liveStats ? liveStats.total_accounts : '4'}
             </span>
           </div>
@@ -194,18 +194,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* User / Logout */}
         <div className="p-3 border-t border-surface-border flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-surface-darker border border-surface-border flex items-center justify-center text-xs font-semibold text-slate-300">
+            <div className="w-7 h-7 rounded-lg bg-surface-darker border border-surface-border flex items-center justify-center text-xs font-bold text-slate-700 dark:text-slate-300">
               A
             </div>
             <div>
-              <div className="text-xs font-semibold text-white">Administrator</div>
+              <div className="text-xs font-bold text-slate-900 dark:text-white">Administrator</div>
               <div className="text-[10px] text-slate-500">TapKnock Console</div>
             </div>
           </div>
           <button
             onClick={handleLogout}
             title="Sign out"
-            className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-surface-darker rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-slate-500 hover:text-red-500 dark:text-slate-400 dark:hover:text-red-400 hover:bg-surface-darker rounded-lg transition-colors cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
           </button>
@@ -215,9 +215,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Header */}
-        <header className="h-14 border-b border-surface-border bg-surface-card/60 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-30">
+        <header className="h-14 border-b border-surface-border bg-surface-card/90 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-30">
           <div className="flex items-center gap-3">
-            <h2 className="text-sm font-semibold text-white capitalize">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white capitalize">
               {pathname === '/dashboard'
                 ? 'Overview & Analytics'
                 : pathname.replace('/dashboard/', '').replace('-', ' ')}
@@ -225,8 +225,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 text-xs bg-surface-darker px-3 py-1.5 rounded-full border border-surface-border text-slate-300">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="hidden sm:flex items-center gap-2 text-xs bg-surface-card px-3 py-1.5 rounded-full border border-surface-border text-slate-700 dark:text-slate-300 font-medium">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>Droplet Backend: 64.227.155.199</span>
             </div>
 
@@ -236,7 +236,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               href="https://tapknock.generalquery.xyz"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-slate-400 hover:text-white flex items-center gap-1 bg-surface-darker px-3 py-1.5 rounded-full border border-surface-border transition-colors"
+              className="text-xs text-slate-700 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white flex items-center gap-1.5 bg-surface-card hover:bg-surface-darker px-3 py-1.5 rounded-full border border-surface-border transition-colors font-medium"
             >
               <span>Main App</span>
               <ExternalLink className="w-3 h-3" />

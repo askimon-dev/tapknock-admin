@@ -147,17 +147,17 @@ export default function RingsAuditPage() {
       <div className="bg-surface-card rounded-2xl border border-surface-border overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-surface-darker/60 border-b border-surface-border text-slate-400">
+            <thead className="bg-surface-darker border-b border-surface-border text-slate-600 dark:text-slate-400">
               <tr>
-                <th className="py-3.5 px-4 font-medium">Door</th>
-                <th className="py-3.5 px-4 font-medium">Visitor</th>
-                <th className="py-3.5 px-4 font-medium">Reason</th>
-                <th className="py-3.5 px-4 font-medium">Outcome</th>
-                <th className="py-3.5 px-4 font-medium">Trust Level</th>
-                <th className="py-3.5 px-4 font-medium">Duration</th>
-                <th className="py-3.5 px-4 font-medium">Media Note</th>
-                <th className="py-3.5 px-4 font-medium">Date & Time</th>
-                <th className="py-3.5 px-4 font-medium text-right">Details</th>
+                <th className="py-3.5 px-4 font-semibold">Door</th>
+                <th className="py-3.5 px-4 font-semibold">Visitor</th>
+                <th className="py-3.5 px-4 font-semibold">Reason</th>
+                <th className="py-3.5 px-4 font-semibold">Outcome</th>
+                <th className="py-3.5 px-4 font-semibold">Trust Level</th>
+                <th className="py-3.5 px-4 font-semibold">Duration</th>
+                <th className="py-3.5 px-4 font-semibold">Media Note</th>
+                <th className="py-3.5 px-4 font-semibold">Date & Time</th>
+                <th className="py-3.5 px-4 font-semibold text-right">Details</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-border/50">
@@ -169,27 +169,27 @@ export default function RingsAuditPage() {
 
                 return (
                   <tr key={ring.id} className="hover:bg-surface-darker/50 transition-colors">
-                    <td className="py-3 px-4 font-semibold text-white">
+                    <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">
                       {ring.door_name || ring.door_label || 'Door'}
                     </td>
-                    <td className="py-3 px-4 text-slate-200 font-medium">
+                    <td className="py-3 px-4 text-slate-800 dark:text-slate-200 font-semibold">
                       {ring.visitor_name || 'Visitor'}
                     </td>
-                    <td className="py-3 px-4 text-slate-400 capitalize">
+                    <td className="py-3 px-4 text-slate-600 dark:text-slate-400 capitalize">
                       {ring.reason || 'General'}
                     </td>
                     <td className="py-3 px-4">
                       <span
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
                           isAnswered
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20'
                             : isDeclined
-                            ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                            ? 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20'
                             : isRinging
-                            ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20 animate-pulse'
+                            ? 'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20 animate-pulse'
                             : isBlocked
-                            ? 'bg-slate-500/20 text-slate-300'
-                            : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                            ? 'bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-500/20 dark:text-slate-300'
+                            : 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20'
                         }`}
                       >
                         {isAnswered && <CheckCircle2 className="w-3 h-3" />}
@@ -200,29 +200,29 @@ export default function RingsAuditPage() {
                     </td>
                     <td className="py-3 px-4">
                       <span
-                        className={`text-[10px] px-1.5 py-0.5 rounded capitalize ${
+                        className={`text-[10px] px-1.5 py-0.5 rounded font-bold capitalize ${
                           ring.trust_badge === 'verified'
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                            : 'bg-slate-500/10 text-slate-400'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20'
+                            : 'bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-500/10 dark:text-slate-400'
                         }`}
                       >
                         {ring.trust_badge || 'unverified'}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-slate-400">
+                    <td className="py-3 px-4 text-slate-600 dark:text-slate-400 font-medium">
                       {ring.duration_s ? `${ring.duration_s}s` : '—'}
                     </td>
-                    <td className="py-3 px-4 text-slate-400">
+                    <td className="py-3 px-4 text-slate-600 dark:text-slate-400">
                       {ring.has_media ? (
-                        <span className="inline-flex items-center gap-1 text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded text-[11px] font-medium">
+                        <span className="inline-flex items-center gap-1 text-brand-700 bg-brand-50 border border-brand-200 dark:text-brand-400 dark:bg-brand-500/10 px-2 py-0.5 rounded text-[11px] font-bold">
                           <Video className="w-3 h-3" /> Video ({Math.round((ring.media_size || 0) / 1024)} KB)
                         </span>
                       ) : ring.message_text ? (
-                        <span className="text-slate-300 italic truncate max-w-[120px] block">
+                        <span className="text-slate-800 dark:text-slate-300 italic truncate max-w-[120px] block font-medium">
                           &quot;{ring.message_text}&quot;
                         </span>
                       ) : (
-                        <span className="text-slate-600">—</span>
+                        <span className="text-slate-400 dark:text-slate-600">—</span>
                       )}
                     </td>
                     <td className="py-3 px-4 text-slate-500 text-[11px]">

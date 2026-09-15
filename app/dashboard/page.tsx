@@ -119,30 +119,30 @@ export default function DashboardOverview() {
   return (
     <div className="space-y-6">
       {/* Top Banner with Quick Action */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-gradient-to-r from-surface-card via-surface-darker to-surface-card border border-surface-border">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-surface-card border border-surface-border shadow-sm">
         <div>
-          <h1 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
             TapKnock Command Center
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Live PostgreSQL 16
             </span>
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
             Real-time telemetry, visitor call audit, and mobile push notification management
           </p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => setExportOpen(true)}
-            className="px-4 py-2 bg-surface-card hover:bg-surface-border text-slate-200 rounded-xl text-xs font-semibold flex items-center gap-2 border border-surface-border transition-all cursor-pointer"
+            className="px-4 py-2 bg-surface-card hover:bg-surface-darker text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white rounded-xl text-xs font-semibold flex items-center gap-2 border border-surface-border transition-all cursor-pointer shadow-sm"
           >
-            <Download className="w-3.5 h-3.5 text-brand-400" />
+            <Download className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
             <span>Export Analytics</span>
           </button>
           <a
             href="/dashboard/notifications"
-            className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-semibold flex items-center gap-2 shadow-lg shadow-brand-600/25 transition-all cursor-pointer"
+            className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-semibold flex items-center gap-2 shadow-md shadow-brand-600/25 transition-all cursor-pointer keep-white"
           >
             <Send className="w-3.5 h-3.5" />
             <span>Compose Push Notification</span>
@@ -157,17 +157,17 @@ export default function DashboardOverview() {
           return (
             <div
               key={idx}
-              className="p-4 rounded-2xl bg-surface-card border border-surface-border hover:border-surface-border/80 transition-all hover:shadow-lg hover:shadow-black/40"
+              className="p-4 rounded-2xl bg-surface-card border border-surface-border hover:border-surface-border/80 transition-all shadow-sm hover:shadow-md"
             >
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs text-slate-400 font-medium truncate">{kpi.label}</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold truncate">{kpi.label}</span>
                 <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${kpi.color} flex items-center justify-center text-white shadow-sm`}>
                   <Icon className="w-4 h-4" />
                 </div>
               </div>
-              <div className="text-2xl font-bold text-white tracking-tight">{kpi.value}</div>
-              <div className="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
-                <span className="text-slate-500">•</span>
+              <div className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{kpi.value}</div>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1 font-medium">
+                <span className="text-slate-400">•</span>
                 <span className="truncate">{kpi.trend}</span>
               </div>
             </div>

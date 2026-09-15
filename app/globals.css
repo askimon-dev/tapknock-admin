@@ -15,10 +15,10 @@
   }
 
   html.light {
-    --surface-darkest: #f1f5f9;
-    --surface-darker: #f8fafc;
+    --surface-darkest: #f8fafc;
+    --surface-darker: #f1f5f9;
     --surface-card: #ffffff;
-    --surface-cardHover: #f1f5f9;
+    --surface-cardHover: #f8fafc;
     --surface-border: #e2e8f0;
     --surface-borderMuted: #cbd5e1;
     --page-bg: #f8fafc;
@@ -30,40 +30,117 @@ body {
   color: var(--page-fg, #f1f5f9);
   background: var(--page-bg, #090d16);
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 html.light body {
-  background: #f8fafc;
+  background-color: #f8fafc;
   color: #0f172a;
 }
 
+/* Light mode typography & high contrast hierarchy */
 html.light .text-white {
-  color: #0f172a !important;
+  color: #0f172a;
 }
 html.light .text-slate-100 {
-  color: #0f172a !important;
+  color: #0f172a;
 }
 html.light .text-slate-200 {
-  color: #1e293b !important;
+  color: #1e293b;
 }
 html.light .text-slate-300 {
-  color: #334155 !important;
+  color: #334155;
 }
 html.light .text-slate-400 {
-  color: #64748b !important;
+  color: #64748b;
+}
+html.light .text-slate-500 {
+  color: #64748b;
 }
 
-/* Ensure buttons and badges with filled colors keep white text */
-html.light button[class*="bg-brand-"],
-html.light a[class*="bg-brand-"],
-html.light button[class*="bg-emerald-"],
-html.light button[class*="bg-rose-"],
-html.light button[class*="bg-gradient-"],
-html.light div[class*="bg-brand-"],
-html.light span[class*="bg-brand-"],
-html.light .keep-white {
+/* Elements that must always retain pure white text (solid action buttons, gradients, active tags) */
+html.light .keep-white,
+html.light button.keep-white,
+html.light a.keep-white,
+html.light .bg-brand-600,
+html.light .bg-brand-500,
+html.light .bg-emerald-600,
+html.light .bg-rose-600,
+html.light .bg-red-600,
+html.light .bg-purple-600,
+html.light a[class*="bg-brand-600"],
+html.light button[class*="bg-brand-600"],
+html.light a[class*="from-brand-600"],
+html.light button[class*="from-brand-600"],
+html.light button[class*="bg-emerald-600"],
+html.light button[class*="bg-rose-600"] {
   color: #ffffff !important;
+}
+
+/* Ensure child text and icons inside solid buttons are white */
+html.light a[class*="bg-brand-600"] *,
+html.light button[class*="bg-brand-600"] *,
+html.light a[class*="from-brand-600"] *,
+html.light button[class*="from-brand-600"] *,
+html.light button[class*="bg-emerald-600"] *,
+html.light button[class*="bg-rose-600"] *,
+html.light .keep-white * {
+  color: #ffffff !important;
+}
+
+/* Light mode pill badges: High-contrast, clean pastel backgrounds with rich deep foregrounds */
+html.light span[class*="bg-brand-500/"],
+html.light span[class*="bg-brand-600/"],
+html.light div[class*="bg-brand-500/"] {
+  background-color: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border-color: #bfdbfe !important;
+}
+
+html.light span[class*="bg-emerald-500/"],
+html.light span[class*="bg-emerald-950/"],
+html.light div[class*="bg-emerald-500/"] {
+  background-color: #f0fdf4 !important;
+  color: #15803d !important;
+  border-color: #bbf7d0 !important;
+}
+
+html.light span[class*="bg-amber-500/"],
+html.light span[class*="bg-amber-950/"],
+html.light div[class*="bg-amber-500/"] {
+  background-color: #fffbeb !important;
+  color: #b45309 !important;
+  border-color: #fde68a !important;
+}
+
+html.light span[class*="bg-red-500/"],
+html.light span[class*="bg-rose-500/"],
+html.light span[class*="bg-rose-950/"],
+html.light div[class*="bg-red-500/"] {
+  background-color: #fff1f2 !important;
+  color: #be123c !important;
+  border-color: #fecdd3 !important;
+}
+
+html.light span[class*="bg-purple-500/"],
+html.light span[class*="bg-purple-950/"],
+html.light div[class*="bg-purple-500/"] {
+  background-color: #faf5ff !important;
+  color: #6b21a8 !important;
+  border-color: #e9d5ff !important;
+}
+
+html.light span[class*="bg-slate-800"],
+html.light div[class*="bg-slate-800"],
+html.light span[class*="bg-slate-500/"] {
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Light mode card shadows & borders for subtle elevation */
+html.light .bg-surface-card {
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
 }
 
 /* Custom modern scrollbar */

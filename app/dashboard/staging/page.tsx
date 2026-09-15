@@ -160,11 +160,11 @@ export default function StagingPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-            <Cpu className="w-5 h-5 text-purple-400" />
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+            <Cpu className="w-5 h-5 text-purple-600 dark:text-purple-400" />
             Staging Server & Environment
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
             Isolated on-demand development server and staging PostgreSQL database
           </p>
         </div>
@@ -174,7 +174,7 @@ export default function StagingPage() {
             loadStatus();
             loadLogs();
           }}
-          className="self-start sm:self-auto px-3 py-1.5 bg-surface-card hover:bg-surface-border text-slate-300 rounded-xl text-xs flex items-center gap-1.5 border border-surface-border transition-colors cursor-pointer"
+          className="self-start sm:self-auto px-3.5 py-1.5 bg-surface-card hover:bg-surface-darker text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-surface-border transition-colors cursor-pointer shadow-sm"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
           <span>Refresh Telemetry</span>
@@ -186,47 +186,47 @@ export default function StagingPage() {
         <div
           className={`p-4 rounded-2xl text-xs flex items-center gap-3 border ${
             feedback.type === 'success'
-              ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/60'
-              : 'bg-rose-950/40 text-rose-300 border-rose-800/60'
+              ? 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60'
+              : 'bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/60'
           }`}
         >
           {feedback.type === 'success' ? (
-            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
           ) : (
-            <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400" />
+            <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
           )}
-          <span className="flex-1 font-medium">{feedback.message}</span>
+          <span className="flex-1 font-semibold">{feedback.message}</span>
         </div>
       )}
 
       {/* Hero Lifecycle & Power Card */}
-      <div className="p-6 bg-surface-card rounded-2xl border border-surface-border relative overflow-hidden">
+      <div className="p-6 bg-surface-card rounded-2xl border border-surface-border relative overflow-hidden shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-3">
             <div className="flex items-center gap-3">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Environment Lifecycle
               </span>
               <div
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
                   isRunning
-                    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                    : 'bg-slate-800 text-slate-400 border border-slate-700'
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30'
+                    : 'bg-slate-100 text-slate-700 border border-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
                 }`}
               >
                 <span
                   className={`w-2 h-2 rounded-full ${
-                    isRunning ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'
+                    isRunning ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'
                   }`}
                 />
                 <span>{isRunning ? 'RUNNING (ACTIVE)' : 'STOPPED (0% CPU / 0 MB RAM)'}</span>
               </div>
             </div>
 
-            <h2 className="text-2xl font-bold text-white tracking-tight">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
               {isRunning ? 'Staging is Live & Operational' : 'Staging is Powered Off'}
             </h2>
-            <p className="text-xs text-slate-400 max-w-2xl leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
               {isRunning
                 ? 'The staging server container is active on port 8081 connected to tapknock_staging database. Test rings, WebSockets, and new APK builds are isolated here.'
                 : 'The staging container is halted. No CPU or RAM is consumed on your droplet. Turn it on whenever you need to test the next version.'}
@@ -237,10 +237,10 @@ export default function StagingPage() {
             <button
               onClick={handlePowerToggle}
               disabled={powering}
-              className={`px-5 py-3 rounded-2xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer shadow-lg disabled:opacity-50 ${
+              className={`px-5 py-3 rounded-2xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer shadow-md keep-white disabled:opacity-50 ${
                 isRunning
-                  ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-900/20'
-                  : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/20'
+                  ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/20'
+                  : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20'
               }`}
             >
               {powering ? (
@@ -413,72 +413,72 @@ export default function StagingPage() {
       {/* Database Comparison & Management */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Production DB Card */}
-        <div className="p-5 bg-surface-card rounded-2xl border border-surface-border space-y-4">
+        <div className="p-5 bg-surface-card rounded-2xl border border-surface-border space-y-4 shadow-sm">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               Production Database (tapknock)
             </h3>
-            <span className="px-2 py-0.5 text-[10px] font-semibold bg-emerald-950/60 text-emerald-400 border border-emerald-800/60 rounded-md">
+            <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-800/60 rounded-md">
               LIVE CLEAN
             </span>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
             <div className="p-3 bg-surface-darker rounded-xl border border-surface-border">
-              <span className="text-[11px] text-slate-400 block">Accounts</span>
-              <span className="text-xl font-bold text-white mt-1 block">
+              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">Accounts</span>
+              <span className="text-2xl font-bold text-slate-900 dark:text-white mt-1 block">
                 {data?.prodDb?.accounts ?? 0}
               </span>
             </div>
             <div className="p-3 bg-surface-darker rounded-xl border border-surface-border">
-              <span className="text-[11px] text-slate-400 block">Doors</span>
-              <span className="text-xl font-bold text-white mt-1 block">
+              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">Doors</span>
+              <span className="text-2xl font-bold text-slate-900 dark:text-white mt-1 block">
                 {data?.prodDb?.doors ?? 0}
               </span>
             </div>
             <div className="p-3 bg-surface-darker rounded-xl border border-surface-border">
-              <span className="text-[11px] text-slate-400 block">Rings</span>
-              <span className="text-xl font-bold text-white mt-1 block">
+              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">Rings</span>
+              <span className="text-2xl font-bold text-slate-900 dark:text-white mt-1 block">
                 {data?.prodDb?.rings ?? 0}
               </span>
             </div>
           </div>
 
-          <p className="text-[11px] text-slate-400 flex items-center gap-1.5">
-            <Info className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+            <Info className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             <span>Ready for tonight&apos;s live users. Zero test contamination.</span>
           </p>
         </div>
 
         {/* Staging DB Card */}
-        <div className="p-5 bg-surface-card rounded-2xl border border-surface-border space-y-4">
+        <div className="p-5 bg-surface-card rounded-2xl border border-surface-border space-y-4 shadow-sm">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-              <Database className="w-4 h-4 text-purple-400" />
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Database className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               Staging Database (tapknock_staging)
             </h3>
-            <span className="px-2 py-0.5 text-[10px] font-semibold bg-purple-950/60 text-purple-400 border border-purple-800/60 rounded-md">
+            <span className="px-2 py-0.5 text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-950/60 dark:text-purple-400 dark:border-purple-800/60 rounded-md">
               DEVELOPMENT
             </span>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
             <div className="p-3 bg-surface-darker rounded-xl border border-surface-border">
-              <span className="text-[11px] text-slate-400 block">Accounts</span>
-              <span className="text-xl font-bold text-white mt-1 block">
+              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">Accounts</span>
+              <span className="text-2xl font-bold text-slate-900 dark:text-white mt-1 block">
                 {data?.stagingDb?.accounts ?? 0}
               </span>
             </div>
             <div className="p-3 bg-surface-darker rounded-xl border border-surface-border">
-              <span className="text-[11px] text-slate-400 block">Doors</span>
-              <span className="text-xl font-bold text-white mt-1 block">
+              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">Doors</span>
+              <span className="text-2xl font-bold text-slate-900 dark:text-white mt-1 block">
                 {data?.stagingDb?.doors ?? 0}
               </span>
             </div>
             <div className="p-3 bg-surface-darker rounded-xl border border-surface-border">
-              <span className="text-[11px] text-slate-400 block">Rings</span>
-              <span className="text-xl font-bold text-white mt-1 block">
+              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">Rings</span>
+              <span className="text-2xl font-bold text-slate-900 dark:text-white mt-1 block">
                 {data?.stagingDb?.rings ?? 0}
               </span>
             </div>
@@ -488,19 +488,19 @@ export default function StagingPage() {
             <button
               onClick={() => handleDbAction('clone_prod_to_staging')}
               disabled={dbActionLoading !== null}
-              className="flex-1 px-3 py-2 bg-surface-darker hover:bg-surface-border text-slate-200 rounded-xl text-xs font-medium border border-surface-border flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+              className="flex-1 px-3 py-2 bg-surface-card hover:bg-surface-darker text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white rounded-xl text-xs font-semibold border border-surface-border flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 shadow-sm"
             >
-              <ArrowRightLeft className="w-3.5 h-3.5" />
+              <ArrowRightLeft className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
               <span>Clone Prod to Staging</span>
             </button>
 
             <button
               onClick={() => handleDbAction('create_snapshot')}
               disabled={dbActionLoading !== null}
-              className="px-3 py-2 bg-surface-darker hover:bg-surface-border text-slate-200 rounded-xl text-xs font-medium border border-surface-border flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+              className="px-3 py-2 bg-surface-card hover:bg-surface-darker text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white rounded-xl text-xs font-semibold border border-surface-border flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 shadow-sm"
               title="Create Safety Snapshot"
             >
-              <UploadCloud className="w-3.5 h-3.5 text-blue-400" />
+              <UploadCloud className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
               <span>Snapshot</span>
             </button>
           </div>
@@ -508,10 +508,10 @@ export default function StagingPage() {
       </div>
 
       {/* Live Container Log Console */}
-      <div className="p-5 bg-surface-card rounded-2xl border border-surface-border space-y-3">
+      <div className="p-5 bg-surface-card rounded-2xl border border-surface-border space-y-3 shadow-sm">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-            <Terminal className="w-4 h-4 text-slate-400" />
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Terminal className="w-4 h-4 text-slate-500 dark:text-slate-400" />
             Live Staging Container Console
           </h3>
 
@@ -519,14 +519,14 @@ export default function StagingPage() {
             <button
               onClick={loadLogs}
               disabled={loadingLogs}
-              className="px-2.5 py-1 bg-surface-darker hover:bg-surface-border text-slate-300 rounded-lg text-xs flex items-center gap-1.5 border border-surface-border transition-colors cursor-pointer disabled:opacity-50"
+              className="px-2.5 py-1 bg-surface-card hover:bg-surface-darker text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 border border-surface-border transition-colors cursor-pointer disabled:opacity-50 shadow-sm"
             >
               <RefreshCw className={`w-3 h-3 ${loadingLogs ? 'animate-spin' : ''}`} />
               <span>Fetch Logs</span>
             </button>
             <button
               onClick={() => setLogs('')}
-              className="px-2.5 py-1 bg-surface-darker hover:bg-surface-border text-slate-400 hover:text-white rounded-lg text-xs border border-surface-border transition-colors cursor-pointer"
+              className="px-2.5 py-1 bg-surface-card hover:bg-surface-darker text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white rounded-lg text-xs font-medium border border-surface-border transition-colors cursor-pointer shadow-sm"
             >
               Clear
             </button>
@@ -535,21 +535,21 @@ export default function StagingPage() {
 
         <pre
           ref={logBoxRef}
-          className="p-4 bg-black/80 rounded-xl border border-surface-border text-[11.5px] font-mono text-emerald-400/90 h-64 overflow-y-auto whitespace-pre-wrap leading-relaxed select-text"
+          className="p-4 bg-[#090d16] rounded-xl border border-slate-800 text-[11.5px] font-mono text-emerald-400 h-64 overflow-y-auto whitespace-pre-wrap leading-relaxed select-text"
         >
           {logs || 'Container log output will appear here in real-time when the container is active.'}
         </pre>
       </div>
 
       {/* Recovery Points & Backups */}
-      <div className="p-5 bg-surface-card rounded-2xl border border-surface-border space-y-4">
+      <div className="p-5 bg-surface-card rounded-2xl border border-surface-border space-y-4 shadow-sm">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-              <Clock className="w-4 h-4 text-emerald-400" />
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Clock className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               Point-in-Time Recovery Snapshots
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
               Automated and manual snapshots stored on droplet disk (/opt/tapknock-backups)
             </p>
           </div>
@@ -559,11 +559,11 @@ export default function StagingPage() {
           {(data?.snapshots || []).slice(0, 5).map((snap: any) => (
             <div key={snap.name} className="py-2.5 flex items-center justify-between text-xs">
               <div className="flex items-center gap-2.5">
-                <HardDrive className="w-3.5 h-3.5 text-slate-400" />
-                <span className="font-mono text-slate-200">{snap.name}</span>
+                <HardDrive className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+                <span className="font-mono text-slate-800 dark:text-slate-200 font-medium">{snap.name}</span>
               </div>
-              <div className="flex items-center gap-4 text-slate-400">
-                <span className="font-semibold text-slate-300">{snap.size}</span>
+              <div className="flex items-center gap-4 text-slate-500 dark:text-slate-400">
+                <span className="font-semibold text-slate-700 dark:text-slate-300">{snap.size}</span>
                 <span>{new Date(snap.mtime).toLocaleString()}</span>
               </div>
             </div>
