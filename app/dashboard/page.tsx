@@ -18,6 +18,7 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
+  Download,
 } from 'lucide-react';
 import {
   AreaChart,
@@ -33,10 +34,12 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { DashboardMetrics } from '@/lib/types';
+import ExportModal from '@/components/ExportModal';
 
 export default function DashboardOverview() {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [exportOpen, setExportOpen] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -130,6 +133,13 @@ export default function DashboardOverview() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setExportOpen(true)}
+            className="px-4 py-2 bg-surface-card hover:bg-surface-border text-slate-200 rounded-xl text-xs font-semibold flex items-center gap-2 border border-surface-border transition-all cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5 text-brand-400" />
+            <span>Export Analytics</span>
+          </button>
           <a
             href="/dashboard/notifications"
             className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-semibold flex items-center gap-2 shadow-lg shadow-brand-600/25 transition-all cursor-pointer"
@@ -414,6 +424,12 @@ export default function DashboardOverview() {
           </table>
         </div>
       </div>
+
+      <ExportModal
+        isOpen={exportOpen}
+        onClose={() => setExportOpen(false)}
+        defaultType="overview"
+      />
     </div>
   );
 }

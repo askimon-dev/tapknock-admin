@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
 import './globals.css';
+import { ThemeProvider, COOKIE_THEME_NAME } from '@/components/ThemeProvider';
 
 export const metadata: Metadata = {
   title: 'TapKnock • Admin Console & Analytics',
@@ -20,10 +22,16 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const cookieStore = cookies();
+  const savedTheme = cookieStore.get(COOKIE_THEME_NAME)?.value;
+  const initialTheme = savedTheme === 'light' ? 'light' : 'dark';
+
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className={initialTheme} style={{ colorScheme: initialTheme }}>
       <body className="bg-surface-darkest text-slate-100 antialiased min-h-screen selection:bg-brand-600 selection:text-white">
-        {children}
+        <ThemeProvider initialTheme={initialTheme}>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

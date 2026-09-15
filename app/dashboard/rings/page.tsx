@@ -17,8 +17,10 @@ import {
   X,
   MapPin,
   Globe,
+  Download,
 } from 'lucide-react';
 import { Ring } from '@/lib/types';
+import ExportModal from '@/components/ExportModal';
 
 export default function RingsAuditPage() {
   const [rings, setRings] = useState<Ring[]>([]);
@@ -29,6 +31,7 @@ export default function RingsAuditPage() {
   const [selectedRing, setSelectedRing] = useState<Ring | null>(null);
   const [blockReason, setBlockReason] = useState('Abusive behavior');
   const [blockLoading, setBlockLoading] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
 
   const loadRings = async () => {
     setLoading(true);
@@ -91,13 +94,23 @@ export default function RingsAuditPage() {
           </p>
         </div>
 
-        <button
-          onClick={loadRings}
-          className="self-start sm:self-auto px-3 py-1.5 bg-surface-card hover:bg-surface-border text-slate-300 rounded-xl text-xs flex items-center gap-1.5 border border-surface-border transition-colors cursor-pointer"
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          <span>Refresh Audit</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setExportOpen(true)}
+            className="self-start sm:self-auto px-3 py-1.5 bg-surface-card hover:bg-surface-border text-slate-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-surface-border transition-colors cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5 text-brand-400" />
+            <span>Export Call Audit</span>
+          </button>
+
+          <button
+            onClick={loadRings}
+            className="self-start sm:self-auto px-3 py-1.5 bg-surface-card hover:bg-surface-border text-slate-300 rounded-xl text-xs flex items-center gap-1.5 border border-surface-border transition-colors cursor-pointer"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>Refresh Audit</span>
+          </button>
+        </div>
       </div>
 
       {/* Filters and Search */}
@@ -328,6 +341,12 @@ export default function RingsAuditPage() {
           </div>
         </div>
       )}
+
+      <ExportModal
+        isOpen={exportOpen}
+        onClose={() => setExportOpen(false)}
+        defaultType="rings"
+      />
     </div>
   );
 }

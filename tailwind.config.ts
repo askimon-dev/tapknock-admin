@@ -24,12 +24,12 @@ const config: Config = {
           900: '#1e3a8a',
         },
         surface: {
-          darkest: '#090d16',
-          darker: '#0d1322',
-          card: '#131b2e',
-          cardHover: '#18233c',
-          border: '#1e2d4a',
-          borderMuted: '#172238',
+          darkest: 'var(--surface-darkest, #090d16)',
+          darker: 'var(--surface-darker, #0d1322)',
+          card: 'var(--surface-card, #131b2e)',
+          cardHover: 'var(--surface-cardHover, #18233c)',
+          border: 'var(--surface-border, #1e2d4a)',
+          borderMuted: 'var(--surface-borderMuted, #172238)',
         }
       },
     },

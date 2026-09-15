@@ -19,8 +19,10 @@ import {
   ExternalLink,
   Smartphone,
   Cpu,
+  MapPin,
 } from 'lucide-react';
 import TapKnockLogo from '@/components/TapKnockLogo';
+import ThemeToggle from '@/components/ThemeToggle';
 
 interface NavItem {
   label: string;
@@ -31,6 +33,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: 'Overview & Analytics', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Location Heatmap', href: '/dashboard/map', icon: MapPin, badge: 'Live' },
   { label: 'Push Notifications', href: '/dashboard/notifications', icon: BellRing, badge: 'Crucial' },
   { label: 'App Versions', href: '/dashboard/versions', icon: Smartphone, badge: 'Releases' },
   { label: 'Staging Server', href: '/dashboard/staging', icon: Cpu, badge: 'On-Demand' },
@@ -83,12 +86,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <TapKnockLogo size={28} />
           <span className="font-semibold text-white tracking-tight">TapKnock Admin</span>
         </div>
-        <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-surface-darker"
-        >
-          {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-surface-darker"
+          >
+            {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
       </div>
 
       {/* Sidebar */}
@@ -223,6 +229,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span>Droplet Backend: 64.227.155.199</span>
             </div>
+
+            <ThemeToggle />
 
             <a
               href="https://tapknock.generalquery.xyz"

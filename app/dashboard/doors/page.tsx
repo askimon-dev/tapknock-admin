@@ -15,9 +15,11 @@ import {
   Copy,
   Check,
   X,
+  Download,
 } from 'lucide-react';
 import QRCode from 'qrcode';
 import { Door } from '@/lib/types';
+import ExportModal from '@/components/ExportModal';
 
 export default function DoorsPage() {
   const [doors, setDoors] = useState<Door[]>([]);
@@ -26,6 +28,7 @@ export default function DoorsPage() {
   const [qrModal, setQrModal] = useState<{ door: Door; dataUrl: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const [testRingStatus, setTestRingStatus] = useState<string | null>(null);
+  const [exportOpen, setExportOpen] = useState(false);
 
   const loadDoors = async () => {
     setLoading(true);
@@ -111,13 +114,31 @@ export default function DoorsPage() {
           </p>
         </div>
 
-        <button
-          onClick={loadDoors}
-          className="self-start sm:self-auto px-3 py-1.5 bg-surface-card hover:bg-surface-border text-slate-300 rounded-xl text-xs flex items-center gap-1.5 border border-surface-border transition-colors cursor-pointer"
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          <span>Refresh</span>
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <a
+            href="/dashboard/map"
+            className="px-3 py-1.5 bg-brand-600/10 hover:bg-brand-600/20 text-brand-400 border border-brand-500/30 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <MapPin className="w-3.5 h-3.5" />
+            <span>Heatmap View</span>
+          </a>
+
+          <button
+            onClick={() => setExportOpen(true)}
+            className="px-3 py-1.5 bg-surface-card hover:bg-surface-border text-slate-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-surface-border transition-colors cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5 text-brand-400" />
+            <span>Export Doors</span>
+          </button>
+
+          <button
+            onClick={loadDoors}
+            className="px-3 py-1.5 bg-surface-card hover:bg-surface-border text-slate-300 rounded-xl text-xs flex items-center gap-1.5 border border-surface-border transition-colors cursor-pointer"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>Refresh</span>
+          </button>
+        </div>
       </div>
 
       {testRingStatus && (
@@ -290,6 +311,12 @@ export default function DoorsPage() {
           </div>
         </div>
       )}
+
+      <ExportModal
+        isOpen={exportOpen}
+        onClose={() => setExportOpen(false)}
+        defaultType="doors"
+      />
     </div>
   );
 }

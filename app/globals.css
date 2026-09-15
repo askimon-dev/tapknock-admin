@@ -3,16 +3,67 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --background: 13 19 34;
-    --foreground: 241 245 249;
+  :root, html.dark {
+    --surface-darkest: #090d16;
+    --surface-darker: #0d1322;
+    --surface-card: #131b2e;
+    --surface-cardHover: #18233c;
+    --surface-border: #1e2d4a;
+    --surface-borderMuted: #172238;
+    --page-bg: #090d16;
+    --page-fg: #f1f5f9;
+  }
+
+  html.light {
+    --surface-darkest: #f1f5f9;
+    --surface-darker: #f8fafc;
+    --surface-card: #ffffff;
+    --surface-cardHover: #f1f5f9;
+    --surface-border: #e2e8f0;
+    --surface-borderMuted: #cbd5e1;
+    --page-bg: #f8fafc;
+    --page-fg: #0f172a;
   }
 }
 
 body {
-  color: rgb(241, 245, 249);
-  background: #090d16;
+  color: var(--page-fg, #f1f5f9);
+  background: var(--page-bg, #090d16);
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+html.light body {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+html.light .text-white {
+  color: #0f172a !important;
+}
+html.light .text-slate-100 {
+  color: #0f172a !important;
+}
+html.light .text-slate-200 {
+  color: #1e293b !important;
+}
+html.light .text-slate-300 {
+  color: #334155 !important;
+}
+html.light .text-slate-400 {
+  color: #64748b !important;
+}
+
+/* Ensure buttons and badges with filled colors keep white text */
+html.light button[class*="bg-brand-"],
+html.light a[class*="bg-brand-"],
+html.light button[class*="bg-emerald-"],
+html.light button[class*="bg-rose-"],
+html.light button[class*="bg-gradient-"],
+html.light div[class*="bg-brand-"],
+html.light span[class*="bg-brand-"],
+html.light .keep-white {
+  color: #ffffff !important;
 }
 
 /* Custom modern scrollbar */
@@ -21,10 +72,10 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0d1322;
+  background: var(--surface-darker, #0d1322);
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e2d4a;
+  background: var(--surface-border, #1e2d4a);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
