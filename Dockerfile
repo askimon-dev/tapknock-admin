@@ -35,7 +35,8 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-USER nextjs
+# Run as root to allow access to mounted /var/run/docker.sock for staging container lifecycle
+USER root
 
 EXPOSE 3000
 
