@@ -18,6 +18,8 @@ import {
   PhoneCall,
   AlertTriangle,
   Trash2,
+  Check,
+  ShieldCheck,
 } from 'lucide-react';
 import { useTheme } from './ThemeProvider';
 
@@ -265,6 +267,7 @@ export default function DoorHeatmap({
   const { theme } = useTheme();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [mapProvider, setMapProvider] = useState<'google' | 'leaflet'>('leaflet');
+  const [osmStyle, setOsmStyle] = useState<'standard' | 'hot'>('standard');
   const [googleKey, setGoogleKey] = useState<string>('');
   const [showKeyInput, setShowKeyInput] = useState(false);
   const [googleLoaded, setGoogleLoaded] = useState(false);
@@ -281,10 +284,11 @@ export default function DoorHeatmap({
   const googleHeatmapOverlayRef = useRef<ICanvasHeatmapOverlay | null>(null);
   const googleMarkersRef = useRef<any[]>([]);
   const leafletMapInstanceRef = useRef<any>(null);
+  const leafletTileLayerRef = useRef<any>(null);
   const leafletHeatLayerRef = useRef<any>(null);
   const leafletMarkersRef = useRef<any[]>([]);
 
-  // Load stored Google Maps API key
+  // Load stored Google Maps API key & provider preference
   useEffect(() => {
     try {
       const storedKey =
@@ -293,7 +297,14 @@ export default function DoorHeatmap({
         '';
       if (storedKey) {
         setGoogleKey(storedKey);
+      }
+
+      const storedProvider = localStorage.getItem('tk_map_provider');
+      // Default to leaflet (OpenStreetMap) always for reliability unless user explicitly saved google with key
+      if (storedProvider === 'google' && storedKey) {
         setMapProvider('google');
+      } else {
+        setMapProvider('leaflet');
       }
     } catch {
       // LocalStorage access safe
@@ -337,7 +348,7 @@ export default function DoorHeatmap({
     window.gm_authFailure = () => {
       console.warn('Google Maps API authentication failure detected');
       setMapError(
-        'Google Maps authentication failed. Please verify that your API key is valid and Maps JavaScript API is enabled in Google Cloud Console.'
+        'Google Maps requires billing enabled in Google Cloud Console with an attached payment card. Switch to OpenStreetMap below to use the map completely free without any payment details.'
       );
     };
 
@@ -523,7 +534,7 @@ export default function DoorHeatmap({
     }
   }, [mapProvider, googleLoaded, center, validDoors, heatPoints, theme]);
 
-  // Leaflet Renderer
+  // Leaflet Renderer (100% Free OpenStreetMap with zero watermarks & zero API keys)
   useEffect(() => {
     if (mapProvider !== 'leaflet' || !leafletLoaded || !mapContainerRef.current) return;
 
@@ -543,16 +554,20 @@ export default function DoorHeatmap({
       const map = L.map(mapContainerRef.current).setView([center.lat, center.lng], validDoors.length > 0 ? 14 : 11);
       leafletMapInstanceRef.current = map;
 
-      // Basemap tiles (CartoDB dark or voyager light)
+      // 100% Free, Watermark-Free OpenStreetMap Tiles
       const tileUrl =
-        theme === 'dark'
-          ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-          : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+        osmStyle === 'hot'
+          ? 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png'
+          : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
-      L.tileLayer(tileUrl, {
+      const tileLayer = L.tileLayer(tileUrl, {
         maxZoom: 19,
-        attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; OpenStreetMap',
+        subdomains: ['a', 'b', 'c'],
+        className: theme === 'dark' ? 'dark-map-tiles' : '',
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors',
       }).addTo(map);
+      leafletTileLayerRef.current = tileLayer;
 
       // Heat Layer
       if (showHeat && L.heatLayer) {
@@ -617,7 +632,7 @@ export default function DoorHeatmap({
     } catch (err: any) {
       console.error('Leaflet initialization failed:', err);
     }
-  }, [mapProvider, leafletLoaded, center, validDoors, heatPoints, theme]);
+  }, [mapProvider, leafletLoaded, center, validDoors, heatPoints, theme, osmStyle]);
 
   // Adjust heat radius / opacity in real-time
   useEffect(() => {
@@ -632,6 +647,14 @@ export default function DoorHeatmap({
     }
   }, [radius, intensity, showHeat, showPins]);
 
+  const selectProvider = (provider: 'google' | 'leaflet') => {
+    setMapError(null);
+    setMapProvider(provider);
+    try {
+      localStorage.setItem('tk_map_provider', provider);
+    } catch {}
+  };
+
   const saveGoogleKey = (key: string) => {
     const trimmed = key.trim();
     setGoogleKey(trimmed);
@@ -642,11 +665,11 @@ export default function DoorHeatmap({
     setMapError(null);
 
     if (!trimmed) {
-      setMapProvider('leaflet');
+      selectProvider('leaflet');
       return;
     }
 
-    setMapProvider('google');
+    selectProvider('google');
 
     // If script was already loaded with a different key, reload cleanly
     if (typeof window !== 'undefined') {
@@ -664,7 +687,7 @@ export default function DoorHeatmap({
     } catch {}
     setShowKeyInput(false);
     setMapError(null);
-    setMapProvider('leaflet');
+    selectProvider('leaflet');
   };
 
   const handleCenterOnArea = () => {
@@ -689,13 +712,10 @@ export default function DoorHeatmap({
           <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
             <button
               type="button"
-              onClick={() => {
-                setMapError(null);
-                setMapProvider('leaflet');
-              }}
+              onClick={() => selectProvider('leaflet')}
               className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-medium transition-colors cursor-pointer"
             >
-              Switch to OpenStreetMap
+              Switch to OpenStreetMap (Free)
             </button>
             <button
               type="button"
@@ -709,30 +729,30 @@ export default function DoorHeatmap({
       )}
 
       {/* Map Control Bar */}
-      <div className="p-4 bg-surface-card rounded-2xl border border-surface-border flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="p-4 bg-surface-card rounded-2xl border border-surface-border flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
         <div className="flex flex-wrap items-center gap-2">
           {/* Provider Toggle */}
           <div className="p-1 bg-surface-darker rounded-xl border border-surface-border flex items-center gap-1 text-xs">
             <button
               type="button"
-              onClick={() => {
-                setMapError(null);
-                setMapProvider('leaflet');
-              }}
-              className={`px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer ${
+              onClick={() => selectProvider('leaflet')}
+              className={`px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer flex items-center gap-1.5 ${
                 mapProvider === 'leaflet'
                   ? 'bg-brand-600 text-white shadow'
                   : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
               }`}
             >
-              OpenStreetMap / CartoDB
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <span>OpenStreetMap</span>
+              <span className="text-[10px] px-1 bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 rounded font-normal">
+                Free • No Key
+              </span>
             </button>
             <button
               type="button"
               onClick={() => {
-                setMapError(null);
                 if (!googleKey) setShowKeyInput(true);
-                setMapProvider('google');
+                selectProvider('google');
               }}
               className={`px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer flex items-center gap-1.5 ${
                 mapProvider === 'google'
@@ -741,13 +761,47 @@ export default function DoorHeatmap({
               }`}
             >
               <span>Google Maps</span>
-              {!googleKey && (
-                <span className="text-[10px] px-1 bg-amber-500/20 text-amber-600 dark:text-amber-300 rounded font-normal">
-                  Key required
+              {!googleKey ? (
+                <span className="text-[10px] px-1 bg-amber-500/20 text-amber-700 dark:text-amber-300 rounded font-normal">
+                  Card required
+                </span>
+              ) : (
+                <span className="text-[10px] px-1 bg-blue-500/20 text-blue-700 dark:text-blue-300 rounded font-normal">
+                  Key set
                 </span>
               )}
             </button>
           </div>
+
+          {/* OpenStreetMap Style Sub-toggle */}
+          {mapProvider === 'leaflet' && (
+            <div className="p-1 bg-surface-darker rounded-xl border border-surface-border flex items-center gap-1 text-xs">
+              <button
+                type="button"
+                onClick={() => setOsmStyle('standard')}
+                className={`px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+                  osmStyle === 'standard'
+                    ? 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white font-semibold'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                title="Standard Worldwide OpenStreetMap Tiles"
+              >
+                Standard
+              </button>
+              <button
+                type="button"
+                onClick={() => setOsmStyle('hot')}
+                className={`px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+                  osmStyle === 'hot'
+                    ? 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white font-semibold'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                title="Humanitarian High-Contrast OpenStreetMap Tiles"
+              >
+                High-Detail
+              </button>
+            </div>
+          )}
 
           <button
             type="button"
@@ -756,7 +810,7 @@ export default function DoorHeatmap({
             title="Configure Google Maps API Key"
           >
             <Key className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
-            <span className="hidden sm:inline font-medium">API Key</span>
+            <span className="hidden sm:inline font-medium">Google Key</span>
           </button>
 
           <button
@@ -821,44 +875,58 @@ export default function DoorHeatmap({
 
       {/* Google Key Configuration Drawer */}
       {showKeyInput && (
-        <div className="p-4 bg-surface-card rounded-2xl border border-surface-border flex flex-col sm:flex-row items-center gap-3 shadow-md">
-          <div className="flex-1 w-full">
-            <label className="text-xs text-slate-600 dark:text-slate-400 mb-1.5 block font-medium">
-              Google Maps JavaScript API Key (Maps JavaScript API enabled in Google Cloud Console):
-            </label>
+        <div className="p-4 bg-surface-card rounded-2xl border border-surface-border flex flex-col gap-3 shadow-md">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <div>
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <Key className="w-3.5 h-3.5 text-amber-500" />
+                Google Maps JavaScript API Key
+              </h4>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                Google Cloud requires an active billing account (credit/debit card) to activate Google Maps. If you do not have a card connected, OpenStreetMap works immediately without any credentials or watermarks.
+              </p>
+            </div>
+            {googleKey && (
+              <span className="text-[10px] px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/60 rounded-full font-medium shrink-0">
+                Key Stored
+              </span>
+            )}
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center gap-3">
             <input
               type="text"
               value={googleKey}
               onChange={(e) => setGoogleKey(e.target.value)}
               placeholder="AIzaSy..."
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-surface-darker border border-slate-200 dark:border-surface-border rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-brand-500 font-mono"
+              className="w-full flex-1 px-3 py-2 bg-slate-50 dark:bg-surface-darker border border-slate-200 dark:border-surface-border rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-brand-500 font-mono"
             />
-          </div>
-          <div className="flex items-center gap-2 w-full sm:w-auto self-end">
-            {googleKey && (
+            <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+              {googleKey && (
+                <button
+                  type="button"
+                  onClick={clearGoogleKey}
+                  className="w-full sm:w-auto px-3 py-2 bg-slate-100 hover:bg-rose-50 dark:bg-slate-800 dark:hover:bg-rose-950/30 text-rose-600 dark:text-rose-400 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-slate-200 dark:border-slate-700"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Clear Key</span>
+                </button>
+              )}
               <button
                 type="button"
-                onClick={clearGoogleKey}
-                className="w-full sm:w-auto px-3 py-2 bg-slate-100 hover:bg-rose-50 dark:bg-slate-800 dark:hover:bg-rose-950/30 text-rose-600 dark:text-rose-400 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-slate-200 dark:border-slate-700"
+                onClick={() => saveGoogleKey(googleKey)}
+                className="w-full sm:w-auto px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm"
               >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Clear Key</span>
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Save & Activate</span>
               </button>
-            )}
-            <button
-              type="button"
-              onClick={() => saveGoogleKey(googleKey)}
-              className="w-full sm:w-auto px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm"
-            >
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>Save & Load</span>
-            </button>
+            </div>
           </div>
         </div>
       )}
 
       {/* Map Display Viewport */}
-      <div className="relative rounded-2xl overflow-hidden border border-surface-border shadow-2xl h-[560px] bg-slate-100 dark:bg-surface-darkest">
+      <div className="relative rounded-2xl overflow-hidden border border-surface-border shadow-2xl h-[560px] bg-slate-100 dark:bg-[#0b111e]">
         <div ref={mapContainerRef} className="w-full h-full z-10" />
 
         {/* Floating Map Legend Overlay */}
@@ -878,6 +946,10 @@ export default function DoorHeatmap({
           </div>
           <div className="text-[10.5px] text-slate-600 dark:text-slate-400 leading-tight">
             Heat density reflects door installations and cumulative visitor rings in real-time.
+          </div>
+          <div className="pt-1 border-t border-slate-100 dark:border-surface-border flex items-center justify-between text-[10px] text-slate-400">
+            <span>Engine: {mapProvider === 'leaflet' ? 'OpenStreetMap' : 'Google Maps'}</span>
+            <span className="text-emerald-600 dark:text-emerald-400 font-medium">Watermark Free</span>
           </div>
         </div>
       </div>
