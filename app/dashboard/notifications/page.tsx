@@ -369,18 +369,18 @@ export default function PushNotificationsPage() {
                   onClick={() => setTargetType('all')}
                   className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
                     targetType === 'all'
-                      ? 'bg-brand-600/10 border-brand-500 text-white shadow-sm ring-1 ring-brand-500/30'
-                      : 'bg-surface-darker border-surface-border text-slate-400 hover:text-white'
+                      ? 'bg-brand-50 border-brand-500 text-slate-900 dark:bg-brand-600/15 dark:border-brand-500 dark:text-white shadow-sm ring-1 ring-brand-500/30'
+                      : 'bg-surface-darker border-surface-border text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-semibold flex items-center gap-1.5">
-                      <Users className="w-3.5 h-3.5 text-brand-400" />
+                    <span className="text-xs font-semibold flex items-center gap-1.5 text-slate-900 dark:text-white">
+                      <Users className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
                       Everyone
                     </span>
-                    {targetType === 'all' && <CheckCircle2 className="w-3.5 h-3.5 text-brand-400" />}
+                    {targetType === 'all' && <CheckCircle2 className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />}
                   </div>
-                  <div className="text-[11px] text-slate-400">All {users.length} active registered accounts</div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400">All {users.length} active registered accounts</div>
                 </button>
 
                 <button
@@ -388,18 +388,18 @@ export default function PushNotificationsPage() {
                   onClick={() => setTargetType('targeted')}
                   className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
                     targetType === 'targeted'
-                      ? 'bg-brand-600/10 border-brand-500 text-white shadow-sm ring-1 ring-brand-500/30'
-                      : 'bg-surface-darker border-surface-border text-slate-400 hover:text-white'
+                      ? 'bg-brand-50 border-brand-500 text-slate-900 dark:bg-brand-600/15 dark:border-brand-500 dark:text-white shadow-sm ring-1 ring-brand-500/30'
+                      : 'bg-surface-darker border-surface-border text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-semibold flex items-center gap-1.5">
-                      <UserCheck className="w-3.5 h-3.5 text-brand-400" />
+                    <span className="text-xs font-semibold flex items-center gap-1.5 text-slate-900 dark:text-white">
+                      <UserCheck className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
                       Targeted Users
                     </span>
-                    {targetType === 'targeted' && <CheckCircle2 className="w-3.5 h-3.5 text-brand-400" />}
+                    {targetType === 'targeted' && <CheckCircle2 className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />}
                   </div>
-                  <div className="text-[11px] text-slate-400">
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400">
                     {selectedUserIds.length} user(s) selected
                   </div>
                 </button>
@@ -435,15 +435,17 @@ export default function PushNotificationsPage() {
                           key={user.id}
                           onClick={() => handleToggleUser(user.id)}
                           className={`p-2 rounded-lg text-xs flex items-center justify-between cursor-pointer transition-colors ${
-                            isSelected ? 'bg-brand-600/20 text-white border border-brand-500/30' : 'hover:bg-surface-card text-slate-300'
+                            isSelected
+                              ? 'bg-brand-50 border border-brand-300 text-slate-900 dark:bg-brand-600/20 dark:text-white dark:border-brand-500/30'
+                              : 'hover:bg-surface-card text-slate-700 dark:text-slate-300'
                           }`}
                         >
                           <div className="truncate">
-                            <span className="font-medium text-white">{user.display_name || 'No Name'}</span>
-                            <span className="text-slate-400 text-[11px] ml-2 truncate">({user.email || user.id.slice(0, 8)})</span>
+                            <span className="font-medium text-slate-900 dark:text-white">{user.display_name || 'No Name'}</span>
+                            <span className="text-slate-500 dark:text-slate-400 text-[11px] ml-2 truncate">({user.email || user.id.slice(0, 8)})</span>
                           </div>
-                          <div className="w-4 h-4 rounded border flex items-center justify-center shrink-0 ml-2 border-slate-600">
-                            {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-brand-400" />}
+                          <div className="w-4 h-4 rounded border flex items-center justify-center shrink-0 ml-2 border-slate-400 dark:border-slate-600">
+                            {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />}
                           </div>
                         </div>
                       );
@@ -462,18 +464,18 @@ export default function PushNotificationsPage() {
                   onClick={() => setScheduleType('immediate')}
                   className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
                     scheduleType === 'immediate'
-                      ? 'bg-brand-600/10 border-brand-500 text-white shadow-sm ring-1 ring-brand-500/30'
-                      : 'bg-surface-darker border-surface-border text-slate-400 hover:text-white'
+                      ? 'bg-brand-50 border-brand-500 text-slate-900 dark:bg-brand-600/15 dark:border-brand-500 dark:text-white shadow-sm ring-1 ring-brand-500/30'
+                      : 'bg-surface-darker border-surface-border text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-semibold flex items-center gap-1.5">
-                      <Send className="w-3.5 h-3.5 text-brand-400" />
+                    <span className="text-xs font-semibold flex items-center gap-1.5 text-slate-900 dark:text-white">
+                      <Send className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
                       Send Immediately
                     </span>
-                    {scheduleType === 'immediate' && <CheckCircle2 className="w-3.5 h-3.5 text-brand-400" />}
+                    {scheduleType === 'immediate' && <CheckCircle2 className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />}
                   </div>
-                  <div className="text-[11px] text-slate-400">Broadcast right now via live WebSocket</div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400">Broadcast right now via live WebSocket</div>
                 </button>
 
                 <button
@@ -481,18 +483,18 @@ export default function PushNotificationsPage() {
                   onClick={() => setScheduleType('scheduled')}
                   className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
                     scheduleType === 'scheduled'
-                      ? 'bg-brand-600/10 border-brand-500 text-white shadow-sm ring-1 ring-brand-500/30'
-                      : 'bg-surface-darker border-surface-border text-slate-400 hover:text-white'
+                      ? 'bg-brand-50 border-brand-500 text-slate-900 dark:bg-brand-600/15 dark:border-brand-500 dark:text-white shadow-sm ring-1 ring-brand-500/30'
+                      : 'bg-surface-darker border-surface-border text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-semibold flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-brand-400" />
+                    <span className="text-xs font-semibold flex items-center gap-1.5 text-slate-900 dark:text-white">
+                      <Calendar className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
                       Schedule for Later
                     </span>
                     {scheduleType === 'scheduled' && <CheckCircle2 className="w-3.5 h-3.5 text-brand-400" />}
                   </div>
-                  <div className="text-[11px] text-slate-400">Deliver automatically at future time</div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400">Deliver automatically at future time</div>
                 </button>
               </div>
 
@@ -521,7 +523,7 @@ export default function PushNotificationsPage() {
               <button
                 type="submit"
                 disabled={sending}
-                className="w-full py-3 px-4 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white text-sm font-semibold rounded-xl shadow-lg shadow-brand-600/25 transition-all flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
+                className="w-full py-3 px-4 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white text-sm font-semibold rounded-xl shadow-lg shadow-brand-600/25 transition-all flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer keep-white"
               >
                 {sending ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -548,7 +550,7 @@ export default function PushNotificationsPage() {
           </div>
 
           {/* Smartphone Frame */}
-          <div className="w-[310px] h-[580px] bg-black rounded-[48px] p-3 ring-8 ring-slate-800 shadow-2xl relative flex flex-col justify-between border-4 border-slate-700">
+          <div className="w-[310px] h-[580px] bg-black rounded-[48px] p-3 ring-8 ring-slate-800 shadow-2xl relative flex flex-col justify-between border-4 border-slate-700 dark-preview">
             {/* Camera notch / dynamic island */}
             <div className="w-24 h-4 bg-slate-900 rounded-full mx-auto mt-1 mb-4 flex items-center justify-center">
               <div className="w-2 h-2 rounded-full bg-slate-950 mr-2" />
@@ -569,7 +571,7 @@ export default function PushNotificationsPage() {
                 {/* Header */}
                 <div className="flex items-center justify-between text-[11px] mb-1.5">
                   <div className="flex items-center gap-1.5">
-                    <div className="w-4 h-4 rounded-md bg-brand-600 flex items-center justify-center font-bold text-[9px] text-white">
+                    <div className="w-4 h-4 rounded-md bg-brand-600 flex items-center justify-center font-bold text-[9px] text-white keep-white">
                       TK
                     </div>
                     <span className="font-semibold text-slate-200">TapKnock</span>

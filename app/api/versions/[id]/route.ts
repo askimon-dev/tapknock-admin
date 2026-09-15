@@ -24,7 +24,22 @@ export async function PATCH(
       'is_mandatory',
       'min_supported_version_code',
       'is_active',
+      'scheduled_at',
+      'published_at',
     ];
+
+    // If scheduled for future, force inactive
+    if (body.scheduled_at && new Date(body.scheduled_at) > new Date()) {
+      body.is_active = 0;
+      body.scheduled_at = new Date(body.scheduled_at).toISOString();
+      body.published_at = null;
+    } else if (body.is_active) {
+      // Activating now
+      body.scheduled_at = null;
+      if (!body.published_at) {
+        body.published_at = new Date().toISOString();
+      }
+    }
 
     const fieldsToUpdate: string[] = [];
     const values: any[] = [];

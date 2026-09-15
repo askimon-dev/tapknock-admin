@@ -4,23 +4,23 @@
 
 @layer base {
   :root, html.dark {
-    --surface-darkest: #090d16;
-    --surface-darker: #0d1322;
-    --surface-card: #131b2e;
-    --surface-cardHover: #18233c;
-    --surface-border: #1e2d4a;
-    --surface-borderMuted: #172238;
+    --surface-darkest: 9 13 22;
+    --surface-darker: 13 19 34;
+    --surface-card: 19 27 46;
+    --surface-cardHover: 24 35 60;
+    --surface-border: 30 45 74;
+    --surface-borderMuted: 23 34 56;
     --page-bg: #090d16;
     --page-fg: #f1f5f9;
   }
 
   html.light {
-    --surface-darkest: #f8fafc;
-    --surface-darker: #f1f5f9;
-    --surface-card: #ffffff;
-    --surface-cardHover: #f8fafc;
-    --surface-border: #e2e8f0;
-    --surface-borderMuted: #cbd5e1;
+    --surface-darkest: 248 250 252;
+    --surface-darker: 241 245 249;
+    --surface-card: 255 255 255;
+    --surface-cardHover: 248 250 252;
+    --surface-border: 226 232 240;
+    --surface-borderMuted: 203 213 225;
     --page-bg: #f8fafc;
     --page-fg: #0f172a;
   }
@@ -38,104 +38,175 @@ html.light body {
   color: #0f172a;
 }
 
-/* Light mode typography & high contrast hierarchy */
-html.light .text-white {
+/* Light mode typography & high contrast hierarchy (excluded from .dark-preview) */
+html.light :not(.dark-preview, .dark-preview *) > .text-white,
+html.light .text-white:not(.dark-preview, .dark-preview *) {
   color: #0f172a;
 }
-html.light .text-slate-100 {
+html.light :not(.dark-preview, .dark-preview *) > .text-slate-100,
+html.light .text-slate-100:not(.dark-preview, .dark-preview *) {
   color: #0f172a;
 }
-html.light .text-slate-200 {
+html.light :not(.dark-preview, .dark-preview *) > .text-slate-200,
+html.light .text-slate-200:not(.dark-preview, .dark-preview *) {
   color: #1e293b;
 }
-html.light .text-slate-300 {
+html.light :not(.dark-preview, .dark-preview *) > .text-slate-300,
+html.light .text-slate-300:not(.dark-preview, .dark-preview *) {
   color: #334155;
 }
-html.light .text-slate-400 {
+html.light :not(.dark-preview, .dark-preview *) > .text-slate-400,
+html.light .text-slate-400:not(.dark-preview, .dark-preview *) {
   color: #64748b;
 }
-html.light .text-slate-500 {
+html.light :not(.dark-preview, .dark-preview *) > .text-slate-500,
+html.light .text-slate-500:not(.dark-preview, .dark-preview *) {
   color: #64748b;
 }
 
 /* Elements that must always retain pure white text (solid action buttons, gradients, active tags) */
 html.light .keep-white,
+html.light .keep-white *,
 html.light button.keep-white,
+html.light button.keep-white *,
 html.light a.keep-white,
-html.light .bg-brand-600,
-html.light .bg-brand-500,
-html.light .bg-emerald-600,
-html.light .bg-rose-600,
-html.light .bg-red-600,
-html.light .bg-purple-600,
-html.light a[class*="bg-brand-600"],
-html.light button[class*="bg-brand-600"],
-html.light a[class*="from-brand-600"],
-html.light button[class*="from-brand-600"],
-html.light button[class*="bg-emerald-600"],
-html.light button[class*="bg-rose-600"] {
-  color: #ffffff !important;
-}
-
-/* Ensure child text and icons inside solid buttons are white */
-html.light a[class*="bg-brand-600"] *,
-html.light button[class*="bg-brand-600"] *,
-html.light a[class*="from-brand-600"] *,
-html.light button[class*="from-brand-600"] *,
-html.light button[class*="bg-emerald-600"] *,
-html.light button[class*="bg-rose-600"] *,
-html.light .keep-white * {
+html.light a.keep-white *,
+html.light button.bg-brand-600,
+html.light button.bg-brand-600 *,
+html.light a.bg-brand-600,
+html.light a.bg-brand-600 *,
+html.light button.bg-brand-500,
+html.light button.bg-brand-500 *,
+html.light button.bg-emerald-600,
+html.light button.bg-emerald-600 *,
+html.light button.bg-rose-600,
+html.light button.bg-rose-600 *,
+html.light button.bg-red-600,
+html.light button.bg-red-600 *,
+html.light button.bg-purple-600,
+html.light button.bg-purple-600 * {
   color: #ffffff !important;
 }
 
 /* Light mode pill badges: High-contrast, clean pastel backgrounds with rich deep foregrounds */
-html.light span[class*="bg-brand-500/"],
-html.light span[class*="bg-brand-600/"],
-html.light div[class*="bg-brand-500/"] {
+html.light span[class*="bg-brand-500/"]:not(.dark-preview *),
+html.light span[class*="bg-brand-600/"]:not(.dark-preview *),
+html.light div[class*="bg-brand-500/"]:not(.dark-preview *) {
   background-color: #eff6ff !important;
   color: #1d4ed8 !important;
   border-color: #bfdbfe !important;
 }
 
-html.light span[class*="bg-emerald-500/"],
-html.light span[class*="bg-emerald-950/"],
-html.light div[class*="bg-emerald-500/"] {
+html.light span[class*="bg-emerald-500/"]:not(.dark-preview *),
+html.light span[class*="bg-emerald-950/"]:not(.dark-preview *),
+html.light div[class*="bg-emerald-500/"]:not(.dark-preview *) {
   background-color: #f0fdf4 !important;
   color: #15803d !important;
   border-color: #bbf7d0 !important;
 }
 
-html.light span[class*="bg-amber-500/"],
-html.light span[class*="bg-amber-950/"],
-html.light div[class*="bg-amber-500/"] {
+html.light span[class*="bg-amber-500/"]:not(.dark-preview *),
+html.light span[class*="bg-amber-950/"]:not(.dark-preview *),
+html.light div[class*="bg-amber-500/"]:not(.dark-preview *) {
   background-color: #fffbeb !important;
   color: #b45309 !important;
   border-color: #fde68a !important;
 }
 
-html.light span[class*="bg-red-500/"],
-html.light span[class*="bg-rose-500/"],
-html.light span[class*="bg-rose-950/"],
-html.light div[class*="bg-red-500/"] {
+html.light span[class*="bg-red-500/"]:not(.dark-preview *),
+html.light span[class*="bg-rose-500/"]:not(.dark-preview *),
+html.light span[class*="bg-rose-950/"]:not(.dark-preview *),
+html.light div[class*="bg-red-500/"]:not(.dark-preview *) {
   background-color: #fff1f2 !important;
   color: #be123c !important;
   border-color: #fecdd3 !important;
 }
 
-html.light span[class*="bg-purple-500/"],
-html.light span[class*="bg-purple-950/"],
-html.light div[class*="bg-purple-500/"] {
+html.light span[class*="bg-purple-500/"]:not(.dark-preview *),
+html.light span[class*="bg-purple-950/"]:not(.dark-preview *),
+html.light div[class*="bg-purple-500/"]:not(.dark-preview *) {
   background-color: #faf5ff !important;
   color: #6b21a8 !important;
   border-color: #e9d5ff !important;
 }
 
-html.light span[class*="bg-slate-800"],
-html.light div[class*="bg-slate-800"],
-html.light span[class*="bg-slate-500/"] {
+html.light span[class*="bg-slate-800"]:not(.dark-preview *),
+html.light div[class*="bg-slate-800"]:not(.dark-preview *),
+html.light span[class*="bg-slate-500/"]:not(.dark-preview *) {
   background-color: #f1f5f9 !important;
   color: #334155 !important;
   border-color: #cbd5e1 !important;
+}
+
+/* Isolated dark preview environments (phone mockups, device previews, update widgets) */
+.dark-preview,
+.dark-preview * {
+  color-scheme: dark;
+}
+
+html.light .dark-preview,
+.dark-preview {
+  color: #f1f5f9;
+}
+
+html.light .dark-preview .text-white,
+.dark-preview .text-white {
+  color: #ffffff !important;
+}
+html.light .dark-preview .text-slate-100,
+.dark-preview .text-slate-100 {
+  color: #f1f5f9 !important;
+}
+html.light .dark-preview .text-slate-200,
+.dark-preview .text-slate-200 {
+  color: #e2e8f0 !important;
+}
+html.light .dark-preview .text-slate-300,
+.dark-preview .text-slate-300 {
+  color: #cbd5e1 !important;
+}
+html.light .dark-preview .text-slate-400,
+.dark-preview .text-slate-400 {
+  color: #94a3b8 !important;
+}
+html.light .dark-preview .text-slate-500,
+.dark-preview .text-slate-500 {
+  color: #64748b !important;
+}
+html.light .dark-preview .text-brand-300,
+.dark-preview .text-brand-300 {
+  color: #93c5fd !important;
+}
+html.light .dark-preview .text-brand-400,
+.dark-preview .text-brand-400 {
+  color: #60a5fa !important;
+}
+html.light .dark-preview .text-blue-200,
+.dark-preview .text-blue-200 {
+  color: #bfdbfe !important;
+}
+html.light .dark-preview .text-blue-300,
+.dark-preview .text-blue-300 {
+  color: #93c5fd !important;
+}
+html.light .dark-preview .text-emerald-300,
+.dark-preview .text-emerald-300 {
+  color: #6ee7b7 !important;
+}
+html.light .dark-preview .text-emerald-400,
+.dark-preview .text-emerald-400 {
+  color: #34d399 !important;
+}
+html.light .dark-preview .text-red-400,
+.dark-preview .text-red-400 {
+  color: #f87171 !important;
+}
+
+html.light .dark-preview div[class*="bg-slate-800"],
+html.light .dark-preview span[class*="bg-slate-800"] {
+  background-color: #1e293b !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
 }
 
 /* Light mode card shadows & borders for subtle elevation */
@@ -149,10 +220,10 @@ html.light .bg-surface-card {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--surface-darker, #0d1322);
+  background: rgb(var(--surface-darker));
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--surface-border, #1e2d4a);
+  background: rgb(var(--surface-border));
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {

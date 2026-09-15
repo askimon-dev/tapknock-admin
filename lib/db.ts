@@ -69,3 +69,14 @@ export async function queryStagingOne<T = any>(text: string, params: any[] = [])
   return rows[0] || null;
 }
 
+export function getDbPool(db: 'production' | 'staging' = 'production'): Pool {
+  return db === 'staging' ? getStagingPool() : getPool();
+}
+
+export async function queryTarget<T = any>(db: 'production' | 'staging', text: string, params: any[] = []): Promise<T[]> {
+  const p = getDbPool(db);
+  const res = await p.query(text, params);
+  return res.rows as T[];
+}
+
+

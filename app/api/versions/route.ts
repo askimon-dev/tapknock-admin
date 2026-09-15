@@ -8,6 +8,40 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   const pool = getPool();
   try {
+    const nowIso = new Date().toISOString();
+    // Auto-activate any scheduled releases whose time has arrived
+    const dueReleases = await pool.query(
+      `SELECT * FROM app_releases WHERE scheduled_at IS NOT NULL AND scheduled_at <= $1 AND is_active = 0`,
+      [nowIso]
+    );
+    for (const rel of dueReleases.rows) {
+      await pool.query(
+        `UPDATE app_releases SET is_active = 0 WHERE (platform = $1 OR platform = 'all') AND id != $2`,
+        [rel.platform, rel.id]
+      );
+      await pool.query(
+        `UPDATE app_releases SET is_active = 1, published_at = $1, scheduled_at = NULL WHERE id = $2`,
+        [nowIso, rel.id]
+      );
+      try {
+        const notifTitle = rel.title || `TapKnock v${rel.version_name} Released!`;
+        const notifBody = `TapKnock v${rel.version_name} is now available with updates. Tap to download and install.`;
+        await sendInternalPush({
+          title: notifTitle,
+          body: notifBody,
+          target: 'all',
+          priority: rel.is_mandatory ? 'high' : 'normal',
+          category: 'update',
+          action_url: rel.download_url,
+          version_name: rel.version_name,
+          version_code: rel.version_code,
+          created_by: 'scheduler',
+        });
+      } catch (err) {
+        console.error('Failed to dispatch scheduled push:', err);
+      }
+    }
+
     const res = await pool.query(
       `SELECT * FROM app_releases ORDER BY version_code DESC`
     );
@@ -35,6 +69,7 @@ export async function POST(req: NextRequest) {
       is_active = 1,
       notify_users = true,
       custom_notification_body,
+      scheduled_at = null,
     } = body;
 
     if (!version_name || !download_url || !title) {
@@ -48,8 +83,13 @@ export async function POST(req: NextRequest) {
     const releaseId = `rel-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`;
     const nowIso = new Date().toISOString();
 
+    const isScheduled = !!scheduled_at && new Date(scheduled_at) > new Date();
+    const effectiveActive = isScheduled ? 0 : (is_active ? 1 : 0);
+    const publishedAt = isScheduled ? null : nowIso;
+    const scheduledAtIso = isScheduled ? new Date(scheduled_at).toISOString() : null;
+
     // If marked active, demote previous active releases for the same platform
-    if (is_active) {
+    if (effectiveActive) {
       await pool.query(
         `UPDATE app_releases SET is_active = 0 WHERE platform = $1 OR platform = 'all'`,
         [platform]
@@ -61,8 +101,8 @@ export async function POST(req: NextRequest) {
         id, version_name, version_code, platform, release_type,
         download_url, title, release_notes, is_mandatory,
         min_supported_version_code, is_active, download_count,
-        created_at, published_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 0, $12, $13)
+        created_at, published_at, scheduled_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 0, $12, $13, $14)
       RETURNING *
     `;
 
@@ -77,9 +117,10 @@ export async function POST(req: NextRequest) {
       release_notes.trim(),
       is_mandatory ? 1 : 0,
       parseInt(min_supported_version_code, 10) || 0,
-      is_active ? 1 : 0,
+      effectiveActive,
       nowIso,
-      nowIso,
+      publishedAt,
+      scheduledAtIso,
     ];
 
     const result = await pool.query(insertQuery, values);
@@ -92,14 +133,14 @@ export async function POST(req: NextRequest) {
       [
         crypto.randomUUID(),
         releaseId,
-        JSON.stringify({ version_name, version_code: code, platform, release_type, download_url }),
+        JSON.stringify({ version_name, version_code: code, platform, release_type, download_url, is_mandatory, scheduled_at: scheduledAtIso }),
         nowIso,
       ]
     );
 
-    // Notify all users immediately if enabled
+    // Notify all users immediately if enabled AND not scheduled
     let pushResult = null;
-    if (notify_users) {
+    if (notify_users && !isScheduled) {
       const notifTitle = title || `TapKnock v${version_name} Released!`;
       const notifBody = custom_notification_body ||
         `TapKnock v${version_name} is now available with updates. Tap to download and install.`;
@@ -120,7 +161,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       ok: true,
       release,
-      push_notified: notify_users,
+      push_notified: notify_users && !isScheduled,
       push_result: pushResult,
     });
   } catch (err: any) {

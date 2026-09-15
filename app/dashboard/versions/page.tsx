@@ -24,9 +24,24 @@ import {
   Globe,
   Play,
   RotateCcw,
+  Calendar,
+  Clock,
 } from 'lucide-react';
 import { AppRelease } from '@/lib/types';
 import TapKnockLogo from '@/components/TapKnockLogo';
+
+function toDatetimeLocal(isoStr?: string | null) {
+  if (!isoStr) return '';
+  const d = new Date(isoStr);
+  if (isNaN(d.getTime())) return '';
+  const pad = (n: number) => (n < 10 ? '0' + n : n);
+  const year = d.getFullYear();
+  const month = pad(d.getMonth() + 1);
+  const day = pad(d.getDate());
+  const hours = pad(d.getHours());
+  const minutes = pad(d.getMinutes());
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
 
 export default function VersionsPage() {
   const [releases, setReleases] = useState<AppRelease[]>([]);
@@ -56,6 +71,8 @@ export default function VersionsPage() {
     min_supported_version_code: 2012,
     is_active: true,
     notify_users: true,
+    is_scheduled: false,
+    scheduled_at: '',
   });
 
   const fetchReleases = async () => {
@@ -80,6 +97,10 @@ export default function VersionsPage() {
   const openCreateModal = () => {
     setEditingRelease(null);
     const maxCode = releases.reduce((max, r) => Math.max(max, Number(r.version_code) || 0), 2012);
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(10, 0, 0, 0);
+
     setFormData({
       version_name: '',
       version_code: maxCode + 1,
@@ -92,12 +113,15 @@ export default function VersionsPage() {
       min_supported_version_code: maxCode,
       is_active: true,
       notify_users: true,
+      is_scheduled: false,
+      scheduled_at: toDatetimeLocal(tomorrow.toISOString()),
     });
     setModalOpen(true);
   };
 
   const openEditModal = (release: AppRelease) => {
     setEditingRelease(release);
+    const isScheduled = !!release.scheduled_at && new Date(release.scheduled_at) > new Date();
     setFormData({
       version_name: release.version_name,
       version_code: release.version_code,
@@ -110,6 +134,8 @@ export default function VersionsPage() {
       min_supported_version_code: release.min_supported_version_code || 0,
       is_active: !!release.is_active,
       notify_users: false,
+      is_scheduled: isScheduled,
+      scheduled_at: release.scheduled_at ? toDatetimeLocal(release.scheduled_at) : '',
     });
     setModalOpen(true);
   };
@@ -121,14 +147,28 @@ export default function VersionsPage() {
       return;
     }
 
+    if (formData.is_scheduled && !formData.scheduled_at) {
+      alert('Please specify a scheduled date and time.');
+      return;
+    }
+
     setSaving(true);
+    const submitPayload = {
+      ...formData,
+      scheduled_at:
+        formData.is_scheduled && formData.scheduled_at
+          ? new Date(formData.scheduled_at).toISOString()
+          : null,
+      is_active: formData.is_scheduled ? false : formData.is_active,
+    };
+
     try {
       if (editingRelease) {
         // Update
         const res = await fetch(`/api/versions/${editingRelease.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
+          body: JSON.stringify(submitPayload),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to update release');
@@ -137,11 +177,13 @@ export default function VersionsPage() {
         const res = await fetch('/api/versions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
+          body: JSON.stringify(submitPayload),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to create release');
-        if (data.push_notified) {
+        if (data.release?.scheduled_at) {
+          alert(`📅 Release v${data.release.version_name} scheduled for ${new Date(data.release.scheduled_at).toLocaleString()}`);
+        } else if (data.push_notified) {
           alert('🚀 Release created! Immediate push notification broadcasted to all users.');
         }
       }
@@ -170,9 +212,27 @@ export default function VersionsPage() {
       const res = await fetch(`/api/versions/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_active: 1 }),
+        body: JSON.stringify({ is_active: 1, scheduled_at: null }),
       });
       if (!res.ok) throw new Error('Failed to activate release');
+      fetchReleases();
+    } catch (err: any) {
+      alert('Error: ' + err.message);
+    }
+  };
+
+  const handlePublishNow = async (id: string, version: string) => {
+    if (!confirm(`Publish scheduled release v${version} live right now and demote previous active?`)) return;
+    try {
+      const res = await fetch(`/api/versions/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: 1, scheduled_at: null }),
+      });
+      if (!res.ok) throw new Error('Failed to publish release');
+      if (confirm(`Broadcast push notification for v${version} to all users now?`)) {
+        await handleResendNotification(id, version);
+      }
       fetchReleases();
     } catch (err: any) {
       alert('Error: ' + err.message);
@@ -326,8 +386,8 @@ export default function VersionsPage() {
               onClick={() => setPreviewTab('notification')}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 previewTab === 'notification'
-                  ? 'bg-brand-600 text-white shadow'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-brand-600 text-white shadow keep-white'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
               }`}
             >
               1. Push Notification
@@ -336,8 +396,8 @@ export default function VersionsPage() {
               onClick={() => setPreviewTab('home')}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 previewTab === 'home'
-                  ? 'bg-brand-600 text-white shadow'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-brand-600 text-white shadow keep-white'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
               }`}
             >
               2. App Home Screen
@@ -346,8 +406,8 @@ export default function VersionsPage() {
               onClick={() => setPreviewTab('widget')}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 previewTab === 'widget'
-                  ? 'bg-brand-600 text-white shadow'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-brand-600 text-white shadow keep-white'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
               }`}
             >
               3. Home Screen Widget
@@ -356,9 +416,9 @@ export default function VersionsPage() {
         </div>
 
         {/* Mockup Display */}
-        <div className="bg-surface-darker border border-surface-border/80 rounded-xl p-5 flex items-center justify-center">
+        <div className="bg-surface-darker border border-surface-border/80 rounded-xl p-5 flex items-center justify-center dark-preview">
           {previewTab === 'notification' && (
-            <div className="w-full max-w-md bg-slate-900/90 border border-slate-700/60 rounded-2xl p-4 shadow-xl">
+            <div className="w-full max-w-md bg-slate-900 border border-slate-700/60 rounded-2xl p-4 shadow-xl">
               <div className="flex items-center justify-between text-[11px] text-slate-400 mb-2">
                 <div className="flex items-center gap-1.5">
                   <TapKnockLogo size={18} />
@@ -382,7 +442,7 @@ export default function VersionsPage() {
           )}
 
           {previewTab === 'home' && (
-            <div className="w-full max-w-md bg-gradient-to-r from-blue-900/40 via-brand-900/30 to-indigo-900/40 border border-brand-500/40 rounded-2xl p-4 shadow-xl">
+            <div className="w-full max-w-md bg-gradient-to-r from-blue-950/80 via-brand-950/70 to-indigo-950/80 border border-brand-500/50 rounded-2xl p-4 shadow-xl">
               <div className="flex items-start gap-3">
                 <div className="w-9 h-9 rounded-xl bg-brand-600/30 border border-brand-500/50 flex items-center justify-center text-lg flex-shrink-0">
                   🚀
@@ -413,13 +473,13 @@ export default function VersionsPage() {
                       href={activeRelease?.download_url || '#'}
                       target="_blank"
                       rel="noreferrer"
-                      className="px-3 py-1.5 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow"
+                      className="px-3 py-1.5 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow keep-white"
                     >
-                      <Download className="w-3.5 h-3.5" />
-                      <span>Download Update</span>
+                      <Download className="w-3.5 h-3.5 text-white" />
+                      <span className="text-white">Download Update</span>
                     </a>
                     {!activeRelease?.is_mandatory && (
-                      <button className="px-3 py-1.5 bg-slate-800/80 hover:bg-slate-800 text-slate-300 rounded-lg text-xs font-medium">
+                      <button className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium">
                         Later
                       </button>
                     )}
@@ -430,7 +490,7 @@ export default function VersionsPage() {
           )}
 
           {previewTab === 'widget' && (
-            <div className="w-full max-w-sm bg-gradient-to-b from-[#1c2333] to-[#121824] border border-blue-500/30 rounded-2xl p-3.5 shadow-2xl text-white">
+            <div className="w-full max-w-sm bg-gradient-to-b from-[#1c2333] to-[#121824] border border-blue-500/40 rounded-2xl p-4 shadow-2xl text-white">
               {/* Header */}
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-1.5">
@@ -443,7 +503,7 @@ export default function VersionsPage() {
               </div>
 
               {/* Dedicated Update Row in Widget */}
-              <div className="bg-gradient-to-r from-brand-600/30 to-indigo-600/30 border border-brand-500/40 rounded-xl p-2.5 my-2 flex items-center justify-between gap-2">
+              <div className="bg-gradient-to-r from-brand-600/40 to-indigo-600/40 border border-brand-500/50 rounded-xl p-2.5 my-2 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="text-sm">🚀</span>
                   <div className="min-w-0">
@@ -455,14 +515,14 @@ export default function VersionsPage() {
                     </div>
                   </div>
                 </div>
-                <button className="px-2.5 py-1 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-[11px] font-bold flex items-center gap-1 flex-shrink-0 shadow">
-                  <Download className="w-3 h-3" />
-                  <span>Download</span>
+                <button className="px-2.5 py-1 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-[11px] font-bold flex items-center gap-1 flex-shrink-0 shadow keep-white">
+                  <Download className="w-3 h-3 text-white" />
+                  <span className="text-white">Download</span>
                 </button>
               </div>
 
               {/* Normal widget card */}
-              <div className="bg-surface-darker/60 rounded-xl p-2.5 text-xs text-slate-400">
+              <div className="bg-slate-800/80 rounded-xl p-2.5 text-xs text-slate-300 border border-slate-700/50">
                 <div className="text-[10px] font-bold text-slate-400 tracking-wider">DOOR STATUS</div>
                 <div className="text-white font-semibold mt-0.5">🛡️ Armed & ready for visitors</div>
               </div>
@@ -533,14 +593,17 @@ export default function VersionsPage() {
         ) : (
           <div className="space-y-4">
             {filteredReleases.map((rel) => {
-              const isActive = rel.is_active === 1;
+              const isScheduled = !!rel.scheduled_at && new Date(rel.scheduled_at) > new Date();
+              const isActive = rel.is_active === 1 && !isScheduled;
               const isMandatory = rel.is_mandatory === 1;
 
               return (
                 <div
                   key={rel.id}
                   className={`p-5 rounded-xl border transition-all ${
-                    isActive
+                    isScheduled
+                      ? 'bg-indigo-950/20 border-indigo-500/40 ring-1 ring-indigo-500/20'
+                      : isActive
                       ? 'bg-brand-950/20 border-brand-500/40 ring-1 ring-brand-500/20'
                       : 'bg-surface-darker border-surface-border hover:border-slate-700'
                   }`}
@@ -557,6 +620,13 @@ export default function VersionsPage() {
                           code: {rel.version_code}
                         </span>
 
+                        {isScheduled && (
+                          <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 flex items-center gap-1.5">
+                            <Clock className="w-3.5 h-3.5 text-indigo-400" />
+                            <span>Scheduled for {new Date(rel.scheduled_at!).toLocaleString()}</span>
+                          </span>
+                        )}
+
                         {isActive && (
                           <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
@@ -565,8 +635,9 @@ export default function VersionsPage() {
                         )}
 
                         {isMandatory && (
-                          <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                            Mandatory Force Update
+                          <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-1">
+                            <AlertTriangle className="w-3 h-3" />
+                            <span>Mandatory Force Update</span>
                           </span>
                         )}
 
@@ -574,7 +645,7 @@ export default function VersionsPage() {
                           {rel.platform}
                         </span>
 
-                        <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-800 text-slate-300 border border-slate-700">
+                        <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                           {rel.release_type === 'drive'
                             ? 'Google Drive'
                             : rel.release_type === 'playstore'
@@ -585,7 +656,7 @@ export default function VersionsPage() {
                         </span>
                       </div>
 
-                      <div className="font-semibold text-sm text-slate-200">{rel.title}</div>
+                      <div className="font-semibold text-sm text-slate-900 dark:text-slate-200">{rel.title}</div>
 
                       {rel.release_notes && (
                         <div className="text-xs text-slate-400 whitespace-pre-line bg-surface-card/60 p-3 rounded-lg border border-surface-border/50 max-h-24 overflow-y-auto font-mono text-[11px]">
@@ -620,24 +691,37 @@ export default function VersionsPage() {
 
                         <span className="text-slate-600">•</span>
                         <span className="text-slate-500">
-                          Published: {new Date(rel.published_at || rel.created_at).toLocaleDateString()}
+                          {isScheduled
+                            ? `Scheduled go-live: ${new Date(rel.scheduled_at!).toLocaleString()}`
+                            : `Published: ${new Date(rel.published_at || rel.created_at).toLocaleDateString()}`}
                         </span>
                       </div>
                     </div>
 
                     {/* Right: Actions */}
                     <div className="flex items-center gap-2 flex-wrap self-start lg:self-center">
-                      <button
-                        onClick={() => handleResendNotification(rel.id, rel.version_name)}
-                        disabled={notifyingId === rel.id}
-                        className="px-3 py-1.5 bg-brand-600/20 hover:bg-brand-600/30 text-brand-300 border border-brand-500/30 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
-                        title="Broadcast push notification to all users"
-                      >
-                        <Bell className="w-3.5 h-3.5" />
-                        <span>{notifyingId === rel.id ? 'Sending...' : 'Broadcast Push'}</span>
-                      </button>
+                      {isScheduled ? (
+                        <button
+                          onClick={() => handlePublishNow(rel.id, rel.version_name)}
+                          className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow transition-all cursor-pointer"
+                          title="Publish this scheduled release live immediately"
+                        >
+                          <Play className="w-3.5 h-3.5" />
+                          <span>Publish Now</span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleResendNotification(rel.id, rel.version_name)}
+                          disabled={notifyingId === rel.id}
+                          className="px-3 py-1.5 bg-brand-600/20 hover:bg-brand-600/30 text-brand-300 border border-brand-500/30 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                          title="Broadcast push notification to all users"
+                        >
+                          <Bell className="w-3.5 h-3.5" />
+                          <span>{notifyingId === rel.id ? 'Sending...' : 'Broadcast Push'}</span>
+                        </button>
+                      )}
 
-                      {!isActive && (
+                      {!isActive && !isScheduled && (
                         <button
                           onClick={() => handleSetActive(rel.id)}
                           className="px-3 py-1.5 bg-surface-card hover:bg-surface-border text-slate-300 rounded-xl text-xs font-semibold border border-surface-border transition-all cursor-pointer"
@@ -827,37 +911,99 @@ export default function VersionsPage() {
 
               {/* Toggles */}
               <div className="space-y-3 pt-2">
-                <label className="flex items-center gap-3 p-3 bg-surface-darker rounded-xl border border-surface-border cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.is_active}
-                    onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                    className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500"
-                  />
-                  <div>
-                    <div className="text-xs font-bold text-white">Set as Live Active Version</div>
-                    <div className="text-[11px] text-slate-400">
-                      Devices checking for updates will see this as the current latest release.
+                {/* Schedule Release Toggle */}
+                <div className={`p-3.5 rounded-xl border transition-all ${
+                  formData.is_scheduled
+                    ? 'bg-indigo-950/30 border-indigo-500/50 ring-1 ring-indigo-500/30'
+                    : 'bg-surface-darker border-surface-border hover:border-slate-700'
+                }`}>
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.is_scheduled}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setFormData({
+                          ...formData,
+                          is_scheduled: checked,
+                          is_active: checked ? false : formData.is_active,
+                        });
+                      }}
+                      className="w-4 h-4 mt-0.5 rounded text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <div className="flex-1">
+                      <div className="text-xs font-bold text-indigo-300 flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+                        <span>Schedule Release for Future Date & Time</span>
+                      </div>
+                      <div className="text-[11px] text-slate-400 mt-0.5">
+                        Hold this release and automatically publish it live when the scheduled date/time arrives.
+                      </div>
                     </div>
-                  </div>
-                </label>
+                  </label>
 
-                <label className="flex items-center gap-3 p-3 bg-surface-darker rounded-xl border border-surface-border cursor-pointer">
+                  {formData.is_scheduled && (
+                    <div className="mt-3 pt-3 border-t border-indigo-500/20 space-y-1.5">
+                      <label className="block text-xs font-semibold text-slate-200 flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-indigo-400" />
+                        <span>Go-Live Date & Time <span className="text-red-400">*</span></span>
+                      </label>
+                      <input
+                        type="datetime-local"
+                        required={formData.is_scheduled}
+                        value={formData.scheduled_at}
+                        onChange={(e) => setFormData({ ...formData, scheduled_at: e.target.value })}
+                        className="w-full px-3 py-2 bg-surface-card border border-indigo-500/40 rounded-xl text-sm text-white focus:outline-none focus:border-indigo-400"
+                      />
+                      <p className="text-[11px] text-slate-400">
+                        Until this timestamp, client devices will continue seeing the existing active version.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Force Update (Mandatory) Toggle */}
+                <label className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${
+                  formData.is_mandatory
+                    ? 'bg-amber-950/40 border-amber-500/60 ring-1 ring-amber-500/30'
+                    : 'bg-surface-darker border-surface-border hover:border-slate-700'
+                }`}>
                   <input
                     type="checkbox"
                     checked={formData.is_mandatory}
                     onChange={(e) => setFormData({ ...formData, is_mandatory: e.target.checked })}
-                    className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500"
+                    className="w-4 h-4 mt-0.5 rounded text-amber-600 focus:ring-amber-500"
                   />
-                  <div>
-                    <div className="text-xs font-bold text-amber-300">Force Update (Mandatory)</div>
-                    <div className="text-[11px] text-slate-400">
-                      Users on older versions will see a critical required update alert.
+                  <div className="flex-1">
+                    <div className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                      <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Force Update (Mandatory)</span>
+                    </div>
+                    <div className="text-[11px] text-slate-300 mt-0.5 leading-relaxed">
+                      Only when this option is selected will users on older versions be blocked from using the app and widget until they update. Calls will still arrive and can be answered normally.
                     </div>
                   </div>
                 </label>
 
-                {!editingRelease && (
+                {/* Active Version Toggle (only if not scheduled) */}
+                {!formData.is_scheduled && (
+                  <label className="flex items-center gap-3 p-3 bg-surface-darker rounded-xl border border-surface-border cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.is_active}
+                      onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                      className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500"
+                    />
+                    <div>
+                      <div className="text-xs font-bold text-white">Set as Live Active Version</div>
+                      <div className="text-[11px] text-slate-400">
+                        Devices checking for updates will immediately see this as the current latest release.
+                      </div>
+                    </div>
+                  </label>
+                )}
+
+                {!editingRelease && !formData.is_scheduled && (
                   <label className="flex items-center gap-3 p-3 bg-brand-950/30 rounded-xl border border-brand-500/40 cursor-pointer">
                     <input
                       type="checkbox"

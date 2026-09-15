@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { query, queryOne } from '@/lib/db';
 import { fetchLiveBackendStats } from '@/lib/tapknock-api';
+import { computeDemographics } from '@/lib/demographics';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
@@ -103,6 +106,18 @@ export async function GET() {
     // 8. Live backend stats
     const liveStats = await fetchLiveBackendStats();
 
+    // 9. Age Group Demographics
+    const accountsData = await query<any>(
+      `SELECT 
+         a.id, 
+         a.dob,
+         (SELECT count(*) FROM doors d WHERE d.owner_id = a.id) as door_count,
+         (SELECT count(*) FROM rings r JOIN doors d ON d.id = r.door_id WHERE d.owner_id = a.id) as ring_count
+       FROM accounts a
+       WHERE a.deleted_at IS NULL`
+    );
+    const ageDemographics = computeDemographics(accountsData || []);
+
     return NextResponse.json({
       totalAccounts: parseInt(accountsCount, 10),
       totalDoors: parseInt(doorsCount, 10),
@@ -116,6 +131,7 @@ export async function GET() {
       hourlyActivity,
       recentRings,
       recentNotifications,
+      ageDemographics,
       liveStats: liveStats?.stats || null,
     });
   } catch (err: any) {

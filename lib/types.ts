@@ -10,6 +10,10 @@ export interface Account {
   state: string | null;
   created_at: string;
   deleted_at: string | null;
+  dob?: string | null;
+  age?: number | null;
+  age_group?: string | null;
+  generation?: string | null;
   door_count?: number;
   ring_count?: number;
   active_sessions_count?: number;
@@ -112,6 +116,38 @@ export interface BlocklistEntry {
   created_at: string;
 }
 
+export interface AgeCohort {
+  cohort: string;
+  usersCount: number;
+  doorsCount: number;
+  ringsCount: number;
+  avgDoorsPerUser: number;
+  avgRingsPerUser: number;
+  percentage: number;
+  color: string;
+}
+
+export interface GenerationDemographic {
+  name: string;
+  count: number;
+  percentage: number;
+  color: string;
+}
+
+export interface AgeDemographics {
+  totalAccounts: number;
+  totalWithDob: number;
+  totalWithoutDob: number;
+  dobCompletionRate: number;
+  averageAge: number | null;
+  medianAge: number | null;
+  youngestAge: number | null;
+  oldestAge: number | null;
+  dominantAgeGroup: string | null;
+  cohorts: AgeCohort[];
+  generations: GenerationDemographic[];
+}
+
 export interface DashboardMetrics {
   totalAccounts: number;
   totalDoors: number;
@@ -125,6 +161,7 @@ export interface DashboardMetrics {
   ringActivity: { date: string; rings: number; answered: number }[];
   outcomesBreakdown: { name: string; count: number; color: string }[];
   hourlyActivity: { hour: string; count: number }[];
+  ageDemographics?: AgeDemographics;
 }
 
 export interface AppRelease {
@@ -142,4 +179,5 @@ export interface AppRelease {
   download_count: number;
   created_at: string;
   published_at: string | null;
+  scheduled_at?: string | null;
 }

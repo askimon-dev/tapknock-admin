@@ -20,6 +20,8 @@ import {
   Smartphone,
   Cpu,
   MapPin,
+  Database,
+  Terminal,
 } from 'lucide-react';
 import TapKnockLogo from '@/components/TapKnockLogo';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -36,6 +38,8 @@ const navItems: NavItem[] = [
   { label: 'Location Heatmap', href: '/dashboard/map', icon: MapPin, badge: 'Live' },
   { label: 'Push Notifications', href: '/dashboard/notifications', icon: BellRing, badge: 'Crucial' },
   { label: 'App Versions', href: '/dashboard/versions', icon: Smartphone, badge: 'Releases' },
+  { label: 'Database Visualizer', href: '/dashboard/database', icon: Database, badge: 'Dev & SQL' },
+  { label: 'Live Server Logs', href: '/dashboard/logs', icon: Terminal, badge: 'Realtime' },
   { label: 'Staging Server', href: '/dashboard/staging', icon: Cpu, badge: 'On-Demand' },
   { label: 'Users & Accounts', href: '/dashboard/users', icon: Users },
   { label: 'Doors & QR Kits', href: '/dashboard/doors', icon: DoorClosed },
@@ -143,7 +147,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                   isActive
                     ? 'bg-brand-600 text-white shadow-md shadow-brand-600/25 keep-white'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-surface-darker/70'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800/80'
                 }`}
               >
                 <div className="flex items-center gap-3">

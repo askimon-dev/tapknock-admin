@@ -1,10 +1,18 @@
 import { NextResponse } from 'next/server';
 import { query, queryOne } from '@/lib/db';
+import { calculateAge, getAgeCohort, getGeneration, parseDobToDate } from '@/lib/demographics';
+
+function normalizeCohort(s: string) {
+  return s.replace(/\s+/g, '').replace(/[–—]/g, '-').toLowerCase();
+}
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const q = searchParams.get('q') || '';
+    const ageGroup = searchParams.get('age_group') || '';
 
     let sql = `
       SELECT a.*,
@@ -23,8 +31,26 @@ export async function GET(request: Request) {
 
     sql += ` ORDER BY a.created_at DESC`;
 
-    const accounts = await query(sql, params);
-    return NextResponse.json({ accounts });
+    const rawAccounts = await query<any>(sql, params);
+    const accounts = (rawAccounts || []).map((acc) => {
+      const age = calculateAge(acc.dob);
+      const birthDate = parseDobToDate(acc.dob);
+      const age_group = getAgeCohort(age);
+      const generation = getGeneration(birthDate);
+
+      return {
+        ...acc,
+        age,
+        age_group,
+        generation,
+      };
+    });
+
+    const filteredAccounts = ageGroup && ageGroup.toLowerCase() !== 'all'
+      ? accounts.filter((a) => normalizeCohort(a.age_group || 'unspecified') === normalizeCohort(ageGroup))
+      : accounts;
+
+    return NextResponse.json({ accounts: filteredAccounts });
   } catch (err: any) {
     return NextResponse.json({ error: 'users_fetch_error', message: err.message }, { status: 500 });
   }
