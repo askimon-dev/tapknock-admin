@@ -17,6 +17,8 @@ export const metadata: Metadata = {
   },
 };
 
+export const dynamic = 'force-dynamic';
+
 export default function RootLayout({
   children,
 }: {
@@ -28,6 +30,24 @@ export default function RootLayout({
 
   return (
     <html lang="en" className={initialTheme} style={{ colorScheme: initialTheme }}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var m = document.cookie.match(/(^| )tk_admin_theme=([^;]+)/);
+                  var t = m ? m[2] : '${initialTheme}';
+                  if (t === 'light' || t === 'dark') {
+                    document.documentElement.className = t;
+                    document.documentElement.style.colorScheme = t;
+                  }
+                } catch(e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className="bg-surface-darkest text-slate-100 antialiased min-h-screen selection:bg-brand-600 selection:text-white">
         <ThemeProvider initialTheme={initialTheme}>
           {children}

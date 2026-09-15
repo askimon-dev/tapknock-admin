@@ -50,14 +50,14 @@ export async function GET(req: NextRequest) {
           d.created_at,
           a.email as owner_email,
           a.display_name as owner_name,
-          c.code as public_code,
+          c.public_code,
           (SELECT count(*) FROM rings r WHERE r.door_id = d.id) as total_rings,
           (SELECT count(*) FROM rings r WHERE r.door_id = d.id AND r.status = 'answered') as answered_rings,
           (SELECT count(*) FROM rings r WHERE r.door_id = d.id AND r.status = 'missed') as missed_rings,
           (SELECT count(*) FROM rings r WHERE r.door_id = d.id AND r.status = 'declined') as declined_rings
         FROM doors d
         LEFT JOIN accounts a ON a.id = d.owner_id
-        LEFT JOIN codes c ON c.door_id = d.id AND c.type = 'public'
+        LEFT JOIN codes c ON c.door_id = d.id AND c.revoked_at IS NULL
         ORDER BY d.created_at DESC
       `);
 
@@ -325,7 +325,7 @@ export async function GET(req: NextRequest) {
     if (type === 'all') {
       const [accounts, doors, rings, notifications, blocklist] = await Promise.all([
         dbQuery<any>('SELECT id, email, display_name, address_line, address_area, postcode, state, created_at FROM accounts WHERE deleted_at IS NULL ORDER BY created_at DESC'),
-        dbQuery<any>('SELECT d.*, c.code as public_code FROM doors d LEFT JOIN codes c ON c.door_id = d.id ORDER BY d.created_at DESC'),
+        dbQuery<any>('SELECT d.*, c.public_code FROM doors d LEFT JOIN codes c ON c.door_id = d.id AND c.revoked_at IS NULL ORDER BY d.created_at DESC'),
         dbQuery<any>('SELECT * FROM rings ORDER BY created_at DESC'),
         dbQuery<any>('SELECT * FROM push_notifications ORDER BY created_at DESC'),
         dbQuery<any>('SELECT * FROM blocklist ORDER BY created_at DESC'),
@@ -370,7 +370,7 @@ export async function GET(req: NextRequest) {
           d.address_line as door_address,
           d.lat as door_lat,
           d.lng as door_lng,
-          c.code as public_qr_code,
+          c.public_code as public_qr_code,
           a.email as door_owner_email,
           r.visitor_name,
           r.reason,
@@ -388,7 +388,7 @@ export async function GET(req: NextRequest) {
         FROM rings r
         LEFT JOIN doors d ON d.id = r.door_id
         LEFT JOIN accounts a ON a.id = d.owner_id
-        LEFT JOIN codes c ON c.door_id = d.id AND c.type = 'public'
+        LEFT JOIN codes c ON c.door_id = d.id AND c.revoked_at IS NULL
         LEFT JOIN accounts ans ON ans.id = r.answered_by
         ORDER BY r.created_at DESC
       `);
