@@ -59,17 +59,19 @@ async function verifyToken(token: string, secretStr: string): Promise<boolean> {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const sessionCookie = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
+  const authHeader = request.headers.get('authorization') || request.headers.get('x-admin-token');
+  const tokenFromHeader = authHeader?.startsWith('Bearer ') ? authHeader.substring(7).trim() : authHeader?.trim();
+  const sessionToken = tokenFromHeader || request.cookies.get(ADMIN_COOKIE_NAME)?.value;
   const secret = getAdminSecret();
 
   // Determine if valid session exists
   let isValid = false;
   let sessionPayload: any = null;
 
-  if (sessionCookie) {
-    isValid = await verifyToken(sessionCookie, secret);
+  if (sessionToken) {
+    isValid = await verifyToken(sessionToken, secret);
     if (isValid) {
-      sessionPayload = decodePayload(sessionCookie);
+      sessionPayload = decodePayload(sessionToken);
       if (sessionPayload?.exp && sessionPayload.exp * 1000 < Date.now()) {
         isValid = false;
         sessionPayload = null;
