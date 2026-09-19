@@ -34,6 +34,7 @@ export async function POST(request: Request) {
         role: user.role,
         avatar_url: user.avatar_url,
       },
+      token,
       landing,
     });
 

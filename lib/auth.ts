@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { query, queryOne } from '@/lib/db';
 import { AdminRole, Permission, getRolePermissions, hasPermission, ROLE_DEFINITIONS } from '@/lib/rbac';
 
@@ -371,9 +371,23 @@ export async function authenticateStaff(
  * Read current session from cookies in Server Components or API routes
  */
 export async function getCurrentSession(): Promise<AuthSession | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(ADMIN_COOKIE_NAME)?.value;
-  return verifySessionToken(token);
+  try {
+    const headerStore = headers();
+    const authHeader = headerStore.get('authorization') || headerStore.get('x-admin-token');
+    if (authHeader) {
+      const rawToken = authHeader.startsWith('Bearer ') ? authHeader.substring(7).trim() : authHeader.trim();
+      const verified = verifySessionToken(rawToken);
+      if (verified) return verified;
+    }
+  } catch {}
+
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get(ADMIN_COOKIE_NAME)?.value;
+    return verifySessionToken(token);
+  } catch {
+    return null;
+  }
 }
 
 /**
