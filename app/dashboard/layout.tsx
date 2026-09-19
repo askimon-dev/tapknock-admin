@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/navigation';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -23,31 +22,44 @@ import {
   Database,
   Terminal,
   MessageSquare,
+  ShieldCheck,
+  Eye,
+  RotateCcw,
+  Sparkles,
 } from 'lucide-react';
 import TapKnockLogo from '@/components/TapKnockLogo';
 import ThemeToggle from '@/components/ThemeToggle';
+import {
+  AdminRole,
+  Permission,
+  ROLE_DEFINITIONS,
+  ALL_ROLES,
+  hasPermission,
+} from '@/lib/rbac';
 
 interface NavItem {
   label: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   badge?: string;
+  permission: Permission;
 }
 
 const navItems: NavItem[] = [
-  { label: 'Overview & Analytics', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'Support & Live Chat', href: '/dashboard/support', icon: MessageSquare, badge: 'Live Chat' },
-  { label: 'Location Heatmap', href: '/dashboard/map', icon: MapPin, badge: 'Live' },
-  { label: 'Push Notifications', href: '/dashboard/notifications', icon: BellRing, badge: 'Crucial' },
-  { label: 'App Versions', href: '/dashboard/versions', icon: Smartphone, badge: 'Releases' },
-  { label: 'Database Visualizer', href: '/dashboard/database', icon: Database, badge: 'Dev & SQL' },
-  { label: 'Live Server Logs', href: '/dashboard/logs', icon: Terminal, badge: 'Realtime' },
-  { label: 'Staging Server', href: '/dashboard/staging', icon: Cpu, badge: 'On-Demand' },
-  { label: 'Users & Accounts', href: '/dashboard/users', icon: Users },
-  { label: 'Doors & QR Kits', href: '/dashboard/doors', icon: DoorClosed },
-  { label: 'Rings & Call Audit', href: '/dashboard/rings', icon: PhoneCall },
-  { label: 'Security & Blocklist', href: '/dashboard/blocklist', icon: ShieldAlert },
-  { label: 'System & Health', href: '/dashboard/system', icon: Server },
+  { label: 'Overview & Analytics', href: '/dashboard', icon: LayoutDashboard, permission: 'analytics:view' },
+  { label: 'Support & Live Chat', href: '/dashboard/support', icon: MessageSquare, badge: 'Live Chat', permission: 'support:view' },
+  { label: 'Location Heatmap', href: '/dashboard/map', icon: MapPin, badge: 'Live', permission: 'map:view' },
+  { label: 'Push Notifications', href: '/dashboard/notifications', icon: BellRing, badge: 'Crucial', permission: 'notifications:view' },
+  { label: 'App Versions', href: '/dashboard/versions', icon: Smartphone, badge: 'Releases', permission: 'versions:view' },
+  { label: 'Database Visualizer', href: '/dashboard/database', icon: Database, badge: 'Dev & SQL', permission: 'database:view' },
+  { label: 'Live Server Logs', href: '/dashboard/logs', icon: Terminal, badge: 'Realtime', permission: 'logs:view' },
+  { label: 'Staging Server', href: '/dashboard/staging', icon: Cpu, badge: 'On-Demand', permission: 'staging:manage' },
+  { label: 'Users & Accounts', href: '/dashboard/users', icon: Users, permission: 'users:view' },
+  { label: 'Doors & QR Kits', href: '/dashboard/doors', icon: DoorClosed, permission: 'doors:view' },
+  { label: 'Rings & Call Audit', href: '/dashboard/rings', icon: PhoneCall, permission: 'rings:view' },
+  { label: 'Security & Blocklist', href: '/dashboard/blocklist', icon: ShieldAlert, permission: 'blocklist:view' },
+  { label: 'Staff & Team Roles', href: '/dashboard/staff', icon: ShieldCheck, badge: 'RBAC', permission: 'staff:view' },
+  { label: 'System & Health', href: '/dashboard/system', icon: Server, permission: 'system:view' },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -56,7 +68,33 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [mobileOpen, setMobileOpen] = useState(false);
   const [liveStats, setLiveStats] = useState<{ online_devices: number; total_accounts: number } | null>(null);
 
+  // User Profile and RBAC state
+  const [userProfile, setUserProfile] = useState<{
+    userId: string;
+    email: string;
+    name: string;
+    role: AdminRole;
+    activeRole: AdminRole;
+    isPreview: boolean;
+    permissions: Permission[];
+  } | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+
+  const fetchUserProfile = async () => {
+    try {
+      const res = await fetch('/api/auth/me');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.ok && data.user) {
+          setUserProfile(data.user);
+        }
+      }
+    } catch {}
+  };
+
   useEffect(() => {
+    fetchUserProfile();
+
     async function checkLive() {
       try {
         const res = await fetch('/api/analytics');
@@ -83,6 +121,41 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       router.push('/login');
     }
   };
+
+  const handleSwitchPreviewRole = async (targetRole: string) => {
+    setPreviewLoading(true);
+    try {
+      const res = await fetch('/api/auth/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetRole: targetRole === userProfile?.role ? null : targetRole }),
+      });
+      if (res.ok) {
+        await fetchUserProfile();
+        router.refresh();
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const handleExitPreview = async () => {
+    if (!userProfile) return;
+    await handleSwitchPreviewRole(userProfile.role);
+  };
+
+  // Filter navigation items by active role's permissions
+  const activeRole = userProfile?.activeRole || 'super_admin';
+  const roleDef = ROLE_DEFINITIONS[activeRole as AdminRole];
+  const isSuper = userProfile?.role === 'super_admin';
+
+  const accessibleNavItems = navItems.filter((item) =>
+    hasPermission(activeRole, item.permission)
+  );
+
+  const canDispatchPush = hasPermission(activeRole, 'notifications:dispatch');
 
   return (
     <div className="min-h-screen bg-surface-darkest flex flex-col md:flex-row text-slate-800 dark:text-slate-100">
@@ -115,7 +188,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <TapKnockLogo size={36} />
             <div>
               <div className="font-bold text-slate-900 dark:text-white tracking-tight text-sm flex items-center gap-1.5">
-                TapKnock <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-brand-50 text-brand-700 border border-brand-200 dark:bg-brand-500/20 dark:text-brand-400 dark:border-brand-500/30">Admin</span>
+                TapKnock{' '}
+                <span className={`text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded border ${roleDef?.badgeClass || 'bg-brand-50 text-brand-700 border-brand-200 dark:bg-brand-500/20 dark:text-brand-400 dark:border-brand-500/30'}`}>
+                  {roleDef?.badgeLabel || 'Admin'}
+                </span>
               </div>
               <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -125,20 +201,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </div>
 
-        {/* Quick Send Push Action button */}
-        <div className="px-4 pt-4 pb-2">
-          <a
-            href="/dashboard/notifications"
-            className="w-full py-2.5 px-3 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white keep-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shadow-md shadow-brand-600/20 transition-all cursor-pointer"
-          >
-            <Send className="w-3.5 h-3.5 text-white" />
-            <span className="text-white">Dispatch Push</span>
-          </a>
-        </div>
+        {/* Quick Send Push Action button (if role has dispatch permission) */}
+        {canDispatchPush && (
+          <div className="px-4 pt-4 pb-2">
+            <a
+              href="/dashboard/notifications"
+              className="w-full py-2.5 px-3 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white keep-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shadow-md shadow-brand-600/20 transition-all cursor-pointer"
+            >
+              <Send className="w-3.5 h-3.5 text-white" />
+              <span className="text-white">Dispatch Push</span>
+            </a>
+          </div>
+        )}
 
         {/* Navigation Items */}
         <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
-          {navItems.map((item) => {
+          {accessibleNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             return (
@@ -197,21 +275,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </div>
 
-        {/* User / Logout */}
+        {/* User Profile & Logout in Sidebar Footer */}
         <div className="p-3 border-t border-surface-border flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-surface-darker border border-surface-border flex items-center justify-center text-xs font-bold text-slate-700 dark:text-slate-300">
-              A
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-brand-500/15 border border-brand-500/30 flex items-center justify-center text-xs font-bold text-brand-500 shrink-0">
+              {userProfile ? userProfile.name.charAt(0).toUpperCase() : 'A'}
             </div>
-            <div>
-              <div className="text-xs font-bold text-slate-900 dark:text-white">Administrator</div>
-              <div className="text-[10px] text-slate-500">TapKnock Console</div>
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                {userProfile ? userProfile.name : 'Administrator'}
+              </div>
+              <div className="text-[10px] text-slate-500 truncate font-mono">
+                {userProfile ? userProfile.email : 'admin@tapknock.com'}
+              </div>
             </div>
           </div>
           <button
             onClick={handleLogout}
             title="Sign out"
-            className="p-1.5 text-slate-500 hover:text-red-500 dark:text-slate-400 dark:hover:text-red-400 hover:bg-surface-darker rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-slate-500 hover:text-red-500 dark:text-slate-400 dark:hover:text-red-400 hover:bg-surface-darker rounded-lg transition-colors cursor-pointer shrink-0"
           >
             <LogOut className="w-4 h-4" />
           </button>
@@ -220,6 +302,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
+        {/* Preview Mode Alert Banner */}
+        {userProfile?.isPreview && (
+          <div className="bg-amber-500 text-slate-950 px-6 py-2 text-xs font-semibold flex items-center justify-between shadow-md">
+            <div className="flex items-center gap-2">
+              <Eye className="w-4 h-4 text-slate-950" />
+              <span>
+                <strong>Role Preview Active:</strong> You are viewing the console as{' '}
+                <span className="underline font-bold">{roleDef?.name}</span>. Navigation and permissions reflect this role.
+              </span>
+            </div>
+            <button
+              onClick={handleExitPreview}
+              className="px-3 py-1 bg-slate-950 text-white hover:bg-slate-900 text-[11px] font-bold rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>Exit Preview</span>
+            </button>
+          </div>
+        )}
+
         {/* Top Header */}
         <header className="h-14 border-b border-surface-border bg-surface-card/90 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-30">
           <div className="flex items-center gap-3">
@@ -231,9 +333,32 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Super Admin Preview Switcher Dropdown */}
+            {isSuper && (
+              <div className="hidden lg:flex items-center gap-2 bg-surface-darker px-3 py-1 rounded-xl border border-surface-border text-xs">
+                <span className="text-slate-500 text-[11px] flex items-center gap-1 font-medium">
+                  <Eye className="w-3.5 h-3.5 text-brand-400" />
+                  <span>Preview as:</span>
+                </span>
+                <select
+                  value={activeRole}
+                  disabled={previewLoading}
+                  onChange={(e) => handleSwitchPreviewRole(e.target.value)}
+                  className="bg-transparent text-slate-900 dark:text-white font-semibold text-xs focus:outline-none cursor-pointer"
+                >
+                  {ALL_ROLES.map((r) => (
+                    <option key={r} value={r} className="bg-surface-card text-slate-900 dark:text-white">
+                      {ROLE_DEFINITIONS[r].name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Droplet backend pill */}
             <div className="hidden sm:flex items-center gap-2 text-xs bg-surface-card px-3 py-1.5 rounded-full border border-surface-border text-slate-700 dark:text-slate-300 font-medium">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Droplet Backend: 64.227.155.199</span>
+              <span>Droplet: 64.227.155.199</span>
             </div>
 
             <ThemeToggle />
