@@ -22,6 +22,7 @@ import {
   MapPin,
   Database,
   Terminal,
+  MessageSquare,
 } from 'lucide-react';
 import TapKnockLogo from '@/components/TapKnockLogo';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -35,6 +36,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: 'Overview & Analytics', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Support & Live Chat', href: '/dashboard/support', icon: MessageSquare, badge: 'Live Chat' },
   { label: 'Location Heatmap', href: '/dashboard/map', icon: MapPin, badge: 'Live' },
   { label: 'Push Notifications', href: '/dashboard/notifications', icon: BellRing, badge: 'Crucial' },
   { label: 'App Versions', href: '/dashboard/versions', icon: Smartphone, badge: 'Releases' },
