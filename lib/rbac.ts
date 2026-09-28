@@ -49,6 +49,9 @@ export type Permission =
   // Staff & Team Governance
   | 'staff:view'
   | 'staff:manage'
+  // Issue & Feature Tracker
+  | 'issues:view'
+  | 'issues:manage'
   // Audit Logs
   | 'audit:view';
 
@@ -67,7 +70,7 @@ export interface RoleDefinition {
 
 export interface PermissionDefinition {
   id: Permission;
-  category: 'Analytics & Insights' | 'Support & Chat' | 'Communication' | 'Releases & Versions' | 'Data & SQL' | 'System & Infra' | 'Users & Doors' | 'Team & Security';
+  category: 'Analytics & Insights' | 'Support & Chat' | 'Communication' | 'Releases & Versions' | 'Data & SQL' | 'System & Infra' | 'Users & Doors' | 'Team & Security' | 'Engineering';
   name: string;
   description: string;
 }
@@ -235,6 +238,19 @@ export const PERMISSION_DEFINITIONS: Record<Permission, PermissionDefinition> = 
     name: 'Manage Staff & RBAC',
     description: 'Invite new staff members, assign roles, reset credentials, and suspend team accounts.',
   },
+  'issues:view': {
+    id: 'issues:view',
+    category: 'Engineering',
+    name: 'View Issue Tracker',
+    description: 'Browse logged bugs, feature requests and improvements, their status, and the work history against each.',
+  },
+  'issues:manage': {
+    id: 'issues:manage',
+    category: 'Engineering',
+    name: 'File & Manage Issues',
+    description: 'Log new bugs and features, set priority and area, assign work to a coding agent, and close or reopen issues.',
+  },
+
   'audit:view': {
     id: 'audit:view',
     category: 'Team & Security',
@@ -290,7 +306,9 @@ export const ROLE_DEFINITIONS: Record<AdminRole, RoleDefinition> = {
       'system:view',
       'staff:view',
       'audit:view',
-    ],
+          'issues:view',
+      'issues:manage',
+],
   },
   support_lead: {
     id: 'support_lead',
@@ -315,7 +333,9 @@ export const ROLE_DEFINITIONS: Record<AdminRole, RoleDefinition> = {
       'blocklist:manage',
       'staff:view',
       'audit:view',
-    ],
+          'issues:view',
+      'issues:manage',
+],
   },
   support_executive: {
     id: 'support_executive',
@@ -333,7 +353,8 @@ export const ROLE_DEFINITIONS: Record<AdminRole, RoleDefinition> = {
       'support:diagnostics',
       'users:view',
       'rings:view',
-    ],
+          'issues:view',
+],
   },
   marketing: {
     id: 'marketing',
@@ -379,7 +400,9 @@ export const ROLE_DEFINITIONS: Record<AdminRole, RoleDefinition> = {
       'system:manage',
       'rings:view',
       'audit:view',
-    ],
+          'issues:view',
+      'issues:manage',
+],
   },
   analyst: {
     id: 'analyst',
@@ -462,6 +485,7 @@ export function getRequiredPermissionForPath(pathname: string): Permission | nul
   if (pathname.startsWith('/dashboard/rings')) return 'rings:view';
   if (pathname.startsWith('/dashboard/blocklist')) return 'blocklist:view';
   if (pathname.startsWith('/dashboard/system')) return 'system:view';
+  if (pathname.startsWith('/dashboard/issues')) return 'issues:view';
   if (pathname.startsWith('/dashboard/staff')) return 'staff:view';
   return null;
 }

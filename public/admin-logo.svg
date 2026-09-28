@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" fill="none">
+  <defs>
+    <!-- Background: Deep Tech Obsidian / Midnight Navy Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B0F19"/>
+      <stop offset="50%" stop-color="#111827"/>
+      <stop offset="100%" stop-color="#030712"/>
+    </linearGradient>
+
+    <!-- Glowing Cyan/Indigo Rim Gradient -->
+    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.7"/>
+      <stop offset="50%" stop-color="#6366F1" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#0B0F19" stop-opacity="0.2"/>
+    </linearGradient>
+
+    <!-- Electric Cyan to Royal Blue Admin Shield Gradient -->
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0EA5E9"/>
+      <stop offset="100%" stop-color="#1E40AF"/>
+    </linearGradient>
+
+    <!-- Vivid Cyan Knob Accent -->
+    <linearGradient id="accentCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="100%" stop-color="#0284C7"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Squircle Base -->
+  <rect x="16" y="16" width="480" height="480" rx="136" fill="url(#bgGrad)" stroke="url(#borderGrad)" stroke-width="4"/>
+
+  <!-- Subtle Ambient Glow behind door -->
+  <circle cx="256" cy="256" r="160" fill="#0284C7" opacity="0.12"/>
+
+  <!-- TapKnock Signature Arched Door in Pure Crisp White -->
+  <path fill-rule="evenodd" clip-rule="evenodd"
+        d="M140 216 C140 152 192 100 256 100 C320 100 372 152 372 216 V416 C372 422.6 366.6 428 360 428 H152 C145.4 428 140 422.6 140 416 V216 Z"
+        fill="#FFFFFF"/>
+
+  <!-- Integrated Precision Security Shield on Door -->
+  <path d="M256 140 L292 156 V196 C292 222 256 244 256 244 C256 244 220 222 220 196 V156 L256 140 Z"
+        fill="url(#shieldGrad)"/>
+  
+  <!-- Sleek White Shield Emblem (Keyhole & Admin Star) -->
+  <circle cx="256" cy="176" r="7" fill="#FFFFFF"/>
+  <polygon points="252.5,180 259.5,180 262,198 250,198" fill="#FFFFFF"/>
+
+  <!-- Knob Cutout with Dark Core and Cyan Beacon Ring -->
+  <circle cx="310" cy="280" r="30" fill="#0B0F19"/>
+  <circle cx="310" cy="280" r="16" fill="url(#accentCyan)"/>
+  <circle cx="310" cy="280" r="6" fill="#FFFFFF"/>
+
+  <!-- Admin Accent Line across base of door -->
+  <rect x="180" y="382" width="152" height="6" rx="3" fill="url(#accentCyan)"/>
+</svg>

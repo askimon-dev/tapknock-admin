@@ -23,6 +23,7 @@ import {
   Terminal,
   MessageSquare,
   ShieldCheck,
+  Bug,
   Eye,
   RotateCcw,
   Sparkles,
@@ -58,6 +59,7 @@ const navItems: NavItem[] = [
   { label: 'Doors & QR Kits', href: '/dashboard/doors', icon: DoorClosed, permission: 'doors:view' },
   { label: 'Rings & Call Audit', href: '/dashboard/rings', icon: PhoneCall, permission: 'rings:view' },
   { label: 'Security & Blocklist', href: '/dashboard/blocklist', icon: ShieldAlert, permission: 'blocklist:view' },
+  { label: 'Issues & Features', href: '/dashboard/issues', icon: Bug, badge: 'Tracker', permission: 'issues:view' },
   { label: 'Staff & Team Roles', href: '/dashboard/staff', icon: ShieldCheck, badge: 'RBAC', permission: 'staff:view' },
   { label: 'System & Health', href: '/dashboard/system', icon: Server, permission: 'system:view' },
 ];

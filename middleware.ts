@@ -154,6 +154,16 @@ export async function middleware(request: NextRequest) {
     }
 
     // Staff management
+    // Writing to the queue is a separate grant from reading it: an agent that
+    // can only report progress should not be able to file or delete work.
+    if (pathname.startsWith('/api/issues') && method !== 'GET' && !hasPermission(activeRole, 'issues:manage')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    if (pathname.startsWith('/api/issues') && method === 'GET' && !hasPermission(activeRole, 'issues:view')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     if (pathname.startsWith('/api/staff') && method !== 'GET' && !hasPermission(activeRole, 'staff:manage')) {
       return NextResponse.json(
         { error: 'forbidden', message: 'Staff management requires super_admin role' },

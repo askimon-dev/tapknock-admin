@@ -181,3 +181,128 @@ export async function adminUploadSupportAttachment(base64: string, fileName: str
   return await res.json();
 }
 
+
+// ------------------------------------------------------------------ issues
+//
+// The bug and feature queue. The server owns it, the same way it owns support
+// tickets, so the panel, the admin app and a coding agent all read one thing.
+
+export interface Issue {
+  id: string;
+  issue_number: number;
+  reference: string;
+  title: string;
+  body: string | null;
+  kind: 'bug' | 'feature' | 'improvement' | 'chore';
+  status: 'open' | 'in_progress' | 'blocked' | 'fixed' | 'verified' | 'closed' | 'wont_fix';
+  priority: 'low' | 'normal' | 'high' | 'critical';
+  area: 'app' | 'server' | 'admin' | 'admin_app' | 'infra' | 'other';
+  assigned_ai: 'claude' | 'antigravity' | null;
+  steps: string | null;
+  expected: string | null;
+  actual: string | null;
+  app_version: string | null;
+  device_info: any;
+  attachments: string[];
+  tags: string[];
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  started_at: string | null;
+  resolved_at: string | null;
+  resolution: string | null;
+  branch: string | null;
+  commit_sha: string | null;
+  test_notes: string | null;
+  fixed_in_version: string | null;
+}
+
+export interface IssueComment {
+  id: string;
+  issue_id: string;
+  author: string;
+  body: string;
+  created_at: string;
+}
+
+const issueHeaders = {
+  'Content-Type': 'application/json',
+  'X-Admin-Secret': ADMIN_SECRET,
+};
+
+export async function adminListIssues(params?: {
+  status?: string;
+  kind?: string;
+  priority?: string;
+  area?: string;
+  assigned_ai?: string;
+  search?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<{ issues: Issue[]; counts: Record<string, number> }> {
+  const query = new URLSearchParams();
+  for (const key of ['status', 'kind', 'priority', 'area', 'assigned_ai', 'search'] as const) {
+    const value = params?.[key];
+    if (value && value !== 'all') query.set(key, value);
+  }
+  if (params?.limit) query.set('limit', String(params.limit));
+  if (params?.offset) query.set('offset', String(params.offset));
+
+  const res = await fetch(`${TAPKNOCK_API_BASE}/api/admin/issues?${query}`, {
+    headers: issueHeaders,
+    cache: 'no-store',
+  });
+  if (!res.ok) throw new Error(`Failed to list issues: ${res.statusText}`);
+  return await res.json();
+}
+
+export async function adminGetIssue(ref: string): Promise<{ issue: Issue; comments: IssueComment[] }> {
+  const res = await fetch(`${TAPKNOCK_API_BASE}/api/admin/issues/${encodeURIComponent(ref)}`, {
+    headers: issueHeaders,
+    cache: 'no-store',
+  });
+  if (!res.ok) throw new Error(`Failed to get issue: ${res.statusText}`);
+  return await res.json();
+}
+
+export async function adminCreateIssue(data: Record<string, any>): Promise<{ issue: Issue }> {
+  const res = await fetch(`${TAPKNOCK_API_BASE}/api/admin/issues`, {
+    method: 'POST',
+    headers: issueHeaders,
+    body: JSON.stringify(data),
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json.message || `Failed to create issue: ${res.statusText}`);
+  return json;
+}
+
+export async function adminUpdateIssue(ref: string, data: Record<string, any>) {
+  const res = await fetch(`${TAPKNOCK_API_BASE}/api/admin/issues/${encodeURIComponent(ref)}`, {
+    method: 'PATCH',
+    headers: issueHeaders,
+    body: JSON.stringify(data),
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json.message || `Failed to update issue: ${res.statusText}`);
+  return json;
+}
+
+export async function adminDeleteIssue(ref: string) {
+  const res = await fetch(`${TAPKNOCK_API_BASE}/api/admin/issues/${encodeURIComponent(ref)}`, {
+    method: 'DELETE',
+    headers: issueHeaders,
+  });
+  if (!res.ok) throw new Error(`Failed to delete issue: ${res.statusText}`);
+  return await res.json();
+}
+
+export async function adminAddIssueComment(ref: string, author: string, body: string) {
+  const res = await fetch(`${TAPKNOCK_API_BASE}/api/admin/issues/${encodeURIComponent(ref)}/comments`, {
+    method: 'POST',
+    headers: issueHeaders,
+    body: JSON.stringify({ author, body }),
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json.message || `Failed to add comment: ${res.statusText}`);
+  return json;
+}
