@@ -58,6 +58,63 @@ export default function VersionsPage() {
   const [notifyingId, setNotifyingId] = useState<string | null>(null);
   const [previewTab, setPreviewTab] = useState<'notification' | 'home' | 'widget'>('notification');
 
+  // Where the build comes from. A link is somebody else's hosting; an upload
+  // puts it on our own server, where exactly one build is kept at a time.
+  const [source, setSource] = useState<'url' | 'upload'>('url');
+  const [apkFile, setApkFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadPct, setUploadPct] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [serverBuild, setServerBuild] = useState<{ name: string; size: number } | null>(null);
+
+  const fetchServerBuild = async () => {
+    try {
+      const res = await fetch('/api/versions/apk');
+      const data = await res.json();
+      setServerBuild(data.files?.[0] ?? null);
+    } catch {
+      setServerBuild(null);
+    }
+  };
+
+  /**
+   * Uploads the build, with a progress bar.
+   *
+   * XHR rather than fetch, purely because fetch cannot report upload progress —
+   * and a hundred megabytes going up with no indication of whether anything is
+   * happening is how people press the button twice.
+   */
+  const uploadApk = () => {
+    if (!apkFile) return;
+    setUploading(true);
+    setUploadPct(0);
+    setUploadError(null);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/versions/apk');
+    xhr.setRequestHeader('content-type', 'application/vnd.android.package-archive');
+    xhr.setRequestHeader('x-filename', apkFile.name);
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) setUploadPct(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () => {
+      setUploading(false);
+      let data: any = null;
+      try { data = JSON.parse(xhr.responseText); } catch { /* not json */ }
+      if (xhr.status >= 200 && xhr.status < 300 && data?.download_url) {
+        setFormData((f) => ({ ...f, download_url: data.download_url, release_type: 'apk' }));
+        fetchServerBuild();
+      } else {
+        setUploadError(data?.message || data?.error || `Upload failed (${xhr.status})`);
+      }
+    };
+    xhr.onerror = () => {
+      setUploading(false);
+      setUploadError('The upload did not reach the server.');
+    };
+    xhr.send(apkFile);
+  };
+
   // Form State
   const [formData, setFormData] = useState({
     version_name: '',
@@ -92,10 +149,15 @@ export default function VersionsPage() {
 
   useEffect(() => {
     fetchReleases();
+    fetchServerBuild();
   }, []);
 
   const openCreateModal = () => {
     setEditingRelease(null);
+    setSource('url');
+    setApkFile(null);
+    setUploadPct(0);
+    setUploadError(null);
     const maxCode = releases.reduce((max, r) => Math.max(max, Number(r.version_code) || 0), 2012);
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -121,6 +183,10 @@ export default function VersionsPage() {
 
   const openEditModal = (release: AppRelease) => {
     setEditingRelease(release);
+    setSource(release.release_type === 'apk' ? 'upload' : 'url');
+    setApkFile(null);
+    setUploadPct(0);
+    setUploadError(null);
     const isScheduled = !!release.scheduled_at && new Date(release.scheduled_at) > new Date();
     setFormData({
       version_name: release.version_name,
@@ -843,10 +909,90 @@ export default function VersionsPage() {
                 </div>
               </div>
 
-              {/* Download URL */}
+              {/* Where the build comes from */}
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Download Link / Store URL <span className="text-red-400">*</span>
+                  Where is the build? <span className="text-red-400">*</span>
+                </label>
+                <div className="flex gap-2 mb-3">
+                  <button
+                    type="button"
+                    onClick={() => setSource('url')}
+                    className={`flex-1 px-3 py-2 rounded-xl text-xs font-semibold border transition ${
+                      source === 'url'
+                        ? 'bg-brand-500/15 border-brand-500 text-brand-200'
+                        : 'bg-surface-darker border-surface-border text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Paste a link
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSource('upload')}
+                    className={`flex-1 px-3 py-2 rounded-xl text-xs font-semibold border transition ${
+                      source === 'upload'
+                        ? 'bg-brand-500/15 border-brand-500 text-brand-200'
+                        : 'bg-surface-darker border-surface-border text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Upload the build
+                  </button>
+                </div>
+
+                {source === 'upload' && (
+                  <div className="mb-3 p-3 bg-surface-darker border border-surface-border rounded-xl">
+                    {serverBuild ? (
+                      <p className="text-[11px] text-amber-300 mb-2">
+                        On the server now: <span className="font-mono">{serverBuild.name}</span>{' '}
+                        ({(serverBuild.size / 1048576).toFixed(1)} MB). Uploading replaces it —
+                        only one build is kept.
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-slate-500 mb-2">
+                        No build on the server yet.
+                      </p>
+                    )}
+
+                    <input
+                      type="file"
+                      accept=".apk,application/vnd.android.package-archive"
+                      onChange={(e) => {
+                        setApkFile(e.target.files?.[0] ?? null);
+                        setUploadError(null);
+                      }}
+                      className="w-full text-xs text-slate-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-surface-card file:text-brand-300 hover:file:bg-surface-border"
+                    />
+
+                    {apkFile && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={uploadApk}
+                          disabled={uploading}
+                          className="px-3 py-1.5 bg-brand-500 hover:bg-brand-400 disabled:opacity-50 text-white text-xs font-semibold rounded-lg"
+                        >
+                          {uploading ? `Uploading ${uploadPct}%` : `Upload ${(apkFile.size / 1048576).toFixed(1)} MB`}
+                        </button>
+                        {uploading && (
+                          <div className="flex-1 h-1.5 bg-surface-border rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-brand-500 transition-all"
+                              style={{ width: `${uploadPct}%` }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {uploadError && (
+                      <p className="text-[11px] text-red-400 mt-2">{uploadError}</p>
+                    )}
+                  </div>
+                )}
+
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  {source === 'upload' ? 'Link the app will download from' : 'Download Link / Store URL'}{' '}
+                  <span className="text-red-400">*</span>
                 </label>
                 <div className="relative">
                   <input
@@ -861,7 +1007,10 @@ export default function VersionsPage() {
                     }
                     value={formData.download_url}
                     onChange={(e) => setFormData({ ...formData, download_url: e.target.value })}
-                    className="w-full pl-3 pr-24 py-2 bg-surface-darker border border-surface-border rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 font-mono text-xs"
+                    readOnly={source === 'upload'}
+                    className={`w-full pl-3 pr-24 py-2 bg-surface-darker border border-surface-border rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 font-mono text-xs ${
+                      source === 'upload' ? 'opacity-70 cursor-not-allowed' : ''
+                    }`}
                   />
                   {formData.download_url && (
                     <a
