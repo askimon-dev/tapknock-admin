@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { createAdminMagicLink } from '@/lib/auth';
 import { TAPKNOCK_API_BASE, ADMIN_SECRET } from '@/lib/tapknock-api';
 
@@ -18,7 +19,13 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(req: NextRequest) {
   try {
-    const { email } = await req.json();
+    const body = await req.json();
+    const { email } = body;
+    // A device that cannot receive the email — the app on a phone, when the
+    // mailbox is read on a laptop — asks for a code and waits on it. The server
+    // mints it rather than the caller, so it cannot be a weak one.
+    const wantsDeviceCode = body.device === true;
+    const deviceCode = wantsDeviceCode ? crypto.randomBytes(32).toString('base64url') : null;
     const address = String(email || '').trim().toLowerCase();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(address)) {
       return NextResponse.json(
@@ -27,7 +34,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const token = await createAdminMagicLink(address);
+    const token = await createAdminMagicLink(address, deviceCode);
     if (!token) {
       return NextResponse.json(
         {
@@ -63,6 +70,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       ok: true,
       message: 'A sign-in link is on its way. It works once, and expires in 15 minutes.',
+      ...(deviceCode ? { device_code: deviceCode } : {}),
     });
   } catch (err: any) {
     return NextResponse.json(

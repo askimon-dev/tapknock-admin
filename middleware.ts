@@ -97,7 +97,8 @@ export async function middleware(request: NextRequest) {
   if (
     pathname.startsWith('/api/auth/login') ||
     pathname.startsWith('/api/auth/request-link') ||
-    pathname.startsWith('/api/auth/link/')
+    pathname.startsWith('/api/auth/link/') ||
+    pathname.startsWith('/api/auth/device/')
   ) {
     return NextResponse.next();
   }

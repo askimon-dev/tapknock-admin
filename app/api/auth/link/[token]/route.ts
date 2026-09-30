@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { consumeAdminMagicLink, createSessionToken, ADMIN_COOKIE_NAME } from '@/lib/auth';
+import {
+  consumeAdminMagicLink,
+  createSessionToken,
+  attachDeviceSession,
+  linkHasWaitingDevice,
+  ADMIN_COOKIE_NAME,
+} from '@/lib/auth';
 import { getDefaultLandingPage } from '@/lib/rbac';
 import { query } from '@/lib/db';
 import crypto from 'crypto';
@@ -27,6 +33,19 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ token: str
 
   const sessionToken = createSessionToken(user);
   const nowIso = new Date().toISOString();
+
+  // If a device asked for this link and is sitting waiting on it, hand the
+  // session over — the link may well have been opened on a different machine
+  // entirely, which is the case this exists for.
+  let handedToDevice = false;
+  try {
+    if (await linkHasWaitingDevice(token)) {
+      await attachDeviceSession(token, sessionToken);
+      handedToDevice = true;
+    }
+  } catch {
+    // The browser in front of us still gets its session either way.
+  }
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() || null;
 
   try {
@@ -49,6 +68,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ token: str
     user: { id: user.id, email: user.email, name: user.name, role: user.role },
     token: sessionToken,
     landing: getDefaultLandingPage(user.role),
+    handed_to_device: handedToDevice,
   });
 
   response.cookies.set({
