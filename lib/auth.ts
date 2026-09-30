@@ -38,31 +38,12 @@ export function getAdminSecret(): string {
   return process.env.ADMIN_SECRET || process.env.TAPKNOCK_SECRET || 'tapknock-admin-secret-key-2026';
 }
 
-export function getMasterPassword(): string {
-  return process.env.ADMIN_PASSWORD || 'admin123';
-}
-
 /**
  * Hash password with PBKDF2 (100,000 rounds of sha512)
  */
 export function hashPassword(password: string, salt = crypto.randomBytes(16).toString('hex')): { hash: string; salt: string } {
   const hash = crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha512').toString('hex');
   return { hash, salt };
-}
-
-/**
- * Constant-time password verification
- */
-export function verifyPassword(password: string, hash: string, salt: string): boolean {
-  try {
-    const check = crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha512').toString('hex');
-    const bufA = Buffer.from(hash, 'hex');
-    const bufB = Buffer.from(check, 'hex');
-    if (bufA.length !== bufB.length) return false;
-    return crypto.timingSafeEqual(bufA, bufB);
-  } catch {
-    return false;
-  }
 }
 
 function base64UrlEncode(str: string): string {
@@ -211,45 +192,26 @@ export async function ensureAdminTables() {
         expires_at    TEXT NOT NULL
       );
 
+      CREATE TABLE IF NOT EXISTS admin_magic_links (
+        token      TEXT PRIMARY KEY,
+        email      TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        expires_at TEXT NOT NULL,
+        used_at    TEXT
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_admin_magic_email ON admin_magic_links(email);
       CREATE INDEX IF NOT EXISTS idx_admin_users_email ON admin_users(email);
       CREATE INDEX IF NOT EXISTS idx_admin_users_role ON admin_users(role);
       CREATE INDEX IF NOT EXISTS idx_admin_sessions_user ON admin_sessions(user_id);
     `);
 
-    // Check if any admin users exist
-    const countRes = await query<{ count: string }>('SELECT COUNT(*) as count FROM admin_users');
-    const count = parseInt(countRes[0]?.count || '0', 10);
-
-    if (count === 0) {
-      const now = new Date().toISOString();
-      const masterPass = getMasterPassword();
-      const defaultAdmin = hashPassword(masterPass);
-      const leadPass = hashPassword('lead123');
-      const supportPass = hashPassword('support123');
-      const marketingPass = hashPassword('market123');
-      const devPass = hashPassword('dev123');
-      const analystPass = hashPassword('analyst123');
-
-      await query(`
-        INSERT INTO admin_users (id, email, name, role, password_hash, salt, status, created_at, updated_at)
-        VALUES
-          ('usr_super_admin', 'admin@tapknock.com', 'System Administrator', 'super_admin', $1, $2, 'active', $3, $3),
-          ('usr_support_lead', 'support.lead@tapknock.com', 'Sarah Jenkins', 'support_lead', $4, $5, 'active', $3, $3),
-          ('usr_support_exec', 'support@tapknock.com', 'Alex Rivera', 'support_executive', $6, $7, 'active', $3, $3),
-          ('usr_marketing', 'marketing@tapknock.com', 'Elena Rostova', 'marketing', $8, $9, 'active', $3, $3),
-          ('usr_developer', 'devops@tapknock.com', 'David Chen', 'developer', $10, $11, 'active', $3, $3),
-          ('usr_analyst', 'analyst@tapknock.com', 'Priya Patel', 'analyst', $12, $13, 'active', $3, $3)
-        ON CONFLICT (email) DO NOTHING
-      `, [
-        defaultAdmin.hash, defaultAdmin.salt, now,
-        leadPass.hash, leadPass.salt,
-        supportPass.hash, supportPass.salt,
-        marketingPass.hash, marketingPass.salt,
-        devPass.hash, devPass.salt,
-        analystPass.hash, analystPass.salt,
-      ]);
-      console.log('[Admin Auth] Initialized admin_users with default team accounts.');
-    }
+    // Deliberately no seeding.
+    //
+    // This inserted six demo accounts whenever the table was empty, with their
+    // passwords in the source, so deleting them simply brought them back. The
+    // console is invite only: a super admin adds an address and that address
+    // gets a link. An empty table meaning nobody can sign in is correct.
 
     _tablesEnsured = true;
   } catch (err) {
@@ -257,115 +219,76 @@ export async function ensureAdminTables() {
   }
 }
 
+// --------------------------------------------------------- sign-in links
+
+/** Long enough to read an email, short enough that a leaked one is stale. */
+const MAGIC_LINK_TTL_MS = 15 * 60 * 1000;
+
 /**
- * Authenticate by either staff email+password or master secret/password
+ * Mints a single-use sign-in link for a member of staff.
+ *
+ * Returns null when the address is not active staff. The console is invite
+ * only, and the caller says so in as many words rather than leaving somebody
+ * waiting for mail that is never coming.
  */
-export async function authenticateStaff(
-  identifier: string,
-  password?: string,
-  clientIp?: string,
-  userAgent?: string
-): Promise<{ user: AdminUser; token: string } | { error: string; status: number }> {
+export async function createAdminMagicLink(email: string): Promise<string | null> {
   await ensureAdminTables();
-
-  const cleanId = (identifier || '').trim().toLowerCase();
-  const masterPassword = getMasterPassword();
-  const masterSecret = getAdminSecret();
-
-  // 1. Check if user entered master password / master secret directly
-  if (
-    cleanId === masterPassword ||
-    cleanId === masterSecret ||
-    ((cleanId === 'admin' || cleanId === 'admin@tapknock.com') && (password === masterPassword || password === masterSecret))
-  ) {
-    // Check if there is an admin@tapknock.com in the DB
-    let rootUser = await queryOne<AdminUser>('SELECT * FROM admin_users WHERE email = $1', ['admin@tapknock.com']);
-    if (!rootUser) {
-      // Fallback virtual root user
-      rootUser = {
-        id: 'system-root-admin',
-        email: 'admin@tapknock.com',
-        name: 'System Root Admin',
-        role: 'super_admin',
-        password_hash: '',
-        salt: '',
-        status: 'active',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-    }
-
-    const token = createSessionToken(rootUser);
-    try {
-      await query(
-        'INSERT INTO admin_audit_logs (id, actor, action, target_type, target_id, details, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-        [
-          crypto.randomUUID(),
-          rootUser.email,
-          'auth.login_master',
-          'admin_user',
-          rootUser.id,
-          JSON.stringify({ ip: clientIp, userAgent }),
-          new Date().toISOString(),
-        ]
-      );
-    } catch {}
-
-    return { user: rootUser, token };
-  }
-
-  // 2. Lookup user in admin_users by email
-  if (!password) {
-    return { error: 'Password is required', status: 400 };
-  }
+  const address = (email || '').trim().toLowerCase();
 
   const user = await queryOne<AdminUser>(
-    'SELECT * FROM admin_users WHERE LOWER(email) = LOWER($1)',
-    [cleanId]
+    "SELECT * FROM admin_users WHERE LOWER(email) = $1 AND status = 'active'",
+    [address]
   );
+  if (!user) return null;
 
-  if (!user) {
-    return { error: 'Invalid email or password', status: 401 };
-  }
-
-  if (user.status === 'suspended') {
-    return { error: 'Account has been suspended. Please contact your system administrator.', status: 403 };
-  }
-
-  if (user.status === 'inactive') {
-    return { error: 'Account is inactive. Please contact your administrator to activate your access.', status: 403 };
-  }
-
-  const isValid = verifyPassword(password, user.password_hash, user.salt);
-  if (!isValid) {
-    return { error: 'Invalid email or password', status: 401 };
-  }
-
-  // Update last login
-  const now = new Date().toISOString();
-  try {
-    await query(
-      'UPDATE admin_users SET last_login_at = $1, last_login_ip = $2, updated_at = $1 WHERE id = $3',
-      [now, clientIp || null, user.id]
-    );
-
-    await query(
-      'INSERT INTO admin_audit_logs (id, actor, action, target_type, target_id, details, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-      [
-        crypto.randomUUID(),
-        user.email,
-        'auth.login_success',
-        'admin_user',
-        user.id,
-        JSON.stringify({ role: user.role, ip: clientIp, userAgent }),
-        now,
-      ]
-    );
-  } catch {}
-
-  const token = createSessionToken(user);
-  return { user, token };
+  const token = crypto.randomBytes(32).toString('base64url');
+  const now = new Date();
+  await query(
+    'INSERT INTO admin_magic_links (token, email, created_at, expires_at) VALUES ($1, $2, $3, $4)',
+    [token, address, now.toISOString(), new Date(now.getTime() + MAGIC_LINK_TTL_MS).toISOString()]
+  );
+  return token;
 }
+
+/** Is this link still good? Asks without spending it. */
+export async function peekAdminMagicLink(token: string): Promise<boolean> {
+  await ensureAdminTables();
+  const row = await queryOne<{ token: string }>(
+    'SELECT token FROM admin_magic_links WHERE token = $1 AND used_at IS NULL AND expires_at > $2',
+    [token, new Date().toISOString()]
+  );
+  return !!row;
+}
+
+/**
+ * Spends the link and returns whose it was.
+ *
+ * The update is what claims it, conditional on the link still being unused — so
+ * two requests racing for one token cannot both win, however they interleave.
+ */
+export async function consumeAdminMagicLink(token: string): Promise<AdminUser | null> {
+  await ensureAdminTables();
+  const claimed = await queryOne<{ email: string }>(
+    `UPDATE admin_magic_links SET used_at = $1
+      WHERE token = $2 AND used_at IS NULL AND expires_at > $1
+      RETURNING email`,
+    [new Date().toISOString(), token]
+  );
+  if (!claimed) return null;
+
+  return queryOne<AdminUser>(
+    "SELECT * FROM admin_users WHERE LOWER(email) = $1 AND status = 'active'",
+    [claimed.email]
+  );
+}
+
+// Password sign-in used to live here, and it also accepted the master password
+// *as the identifier* with no password at all. With a default of `admin123`,
+// anybody who read the login screen was a super admin — and that screen listed
+// six accounts with their passwords, in an APK that goes to testers.
+//
+// The console is invite only now and signs in by emailed link: see
+// createAdminMagicLink / consumeAdminMagicLink.
 
 /**
  * Read current session from cookies in Server Components or API routes

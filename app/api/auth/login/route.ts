@@ -1,57 +1,27 @@
 import { NextResponse } from 'next/server';
-import { authenticateStaff, ADMIN_COOKIE_NAME } from '@/lib/auth';
-import { getDefaultLandingPage } from '@/lib/rbac';
 
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const identifier = body.email || body.identifier || body.password;
-    const password = body.password;
+export const dynamic = 'force-dynamic';
 
-    if (!identifier) {
-      return NextResponse.json({ error: 'invalid_request', message: 'Email or password is required' }, { status: 400 });
-    }
-
-    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1';
-    const userAgent = request.headers.get('user-agent') || 'Unknown';
-
-    const result = await authenticateStaff(identifier, password, clientIp, userAgent);
-
-    if ('error' in result) {
-      return NextResponse.json({ error: 'auth_failed', message: result.error }, { status: result.status });
-    }
-
-    const { user, token } = result;
-    const landing = getDefaultLandingPage(user.role);
-
-    const response = NextResponse.json({
-      ok: true,
-      message: 'Authenticated successfully',
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        avatar_url: user.avatar_url,
-      },
-      token,
-      landing,
-    });
-
-    // Set HTTP-only secure cookie
-    response.cookies.set({
-      name: ADMIN_COOKIE_NAME,
-      value: token,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 7 * 24 * 60 * 60, // 7 days
-    });
-
-    return response;
-  } catch (err: any) {
-    console.error('Login error:', err);
-    return NextResponse.json({ error: 'server_error', message: err.message || 'Internal server error' }, { status: 500 });
-  }
+/**
+ * There are no admin passwords any more.
+ *
+ * This route used to accept an email and password, and would also accept the
+ * master password *as the identifier* with no password at all — which, with a
+ * default of `admin123`, meant anybody who read the login screen was a super
+ * admin. The login screen listed six accounts and their passwords, and shipped
+ * in an APK.
+ *
+ * Kept as an explicit, honest 410 rather than deleted, so an older admin build
+ * gets told what happened instead of a bare 404.
+ */
+export async function POST() {
+  return NextResponse.json(
+    {
+      error: 'password_login_removed',
+      message:
+        'Password sign-in has been removed. The console is invite only and signs in by '
+        + 'emailed link — update the admin app, or use the web console.',
+    },
+    { status: 410 }
+  );
 }

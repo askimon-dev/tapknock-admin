@@ -89,8 +89,16 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Public / auth endpoints
-  if (pathname.startsWith('/api/auth/login')) {
+  // Public / auth endpoints.
+  //
+  // Signing in cannot require being signed in. `request-link` is where somebody
+  // with no session asks for one, and `link/:token` is where they spend it —
+  // the token is the credential for that single call.
+  if (
+    pathname.startsWith('/api/auth/login') ||
+    pathname.startsWith('/api/auth/request-link') ||
+    pathname.startsWith('/api/auth/link/')
+  ) {
     return NextResponse.next();
   }
 

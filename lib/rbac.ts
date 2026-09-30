@@ -5,6 +5,7 @@ export type AdminRole =
   | 'support_executive'
   | 'marketing'
   | 'developer'
+  | 'tester'
   | 'analyst';
 
 export type Permission =
@@ -306,9 +307,9 @@ export const ROLE_DEFINITIONS: Record<AdminRole, RoleDefinition> = {
       'system:view',
       'staff:view',
       'audit:view',
-          'issues:view',
+      'issues:view',
       'issues:manage',
-],
+    ],
   },
   support_lead: {
     id: 'support_lead',
@@ -333,9 +334,9 @@ export const ROLE_DEFINITIONS: Record<AdminRole, RoleDefinition> = {
       'blocklist:manage',
       'staff:view',
       'audit:view',
-          'issues:view',
+      'issues:view',
       'issues:manage',
-],
+    ],
   },
   support_executive: {
     id: 'support_executive',
@@ -400,9 +401,28 @@ export const ROLE_DEFINITIONS: Record<AdminRole, RoleDefinition> = {
       'system:manage',
       'rings:view',
       'audit:view',
-          'issues:view',
+      'issues:view',
       'issues:manage',
-],
+    ],
+  },
+  tester: {
+    id: 'tester',
+    name: 'Tester',
+    badgeLabel: 'Tester',
+    badgeClass: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30',
+    badgeBg: 'bg-amber-500/15',
+    badgeText: 'text-amber-600 dark:text-amber-400',
+    badgeBorder: 'border-amber-500/30',
+    description:
+      'Files and tracks bugs and feature requests. The issue queue and nothing else \u2014 no user data, no rings, no logs, no doors.',
+    // Deliberately not /dashboard, which needs analytics:view. A tester has no
+    // business holding that, so landing them there would bounce them to
+    // forbidden on every sign-in.
+    defaultLandingPage: '/dashboard/issues',
+    permissions: [
+      'issues:view',
+      'issues:manage',
+    ],
   },
   analyst: {
     id: 'analyst',

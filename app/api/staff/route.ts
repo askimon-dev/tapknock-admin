@@ -66,11 +66,14 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { email, name, role, password, phone } = body;
+    const { email, name, role, phone } = body;
 
-    if (!email || !name || !role || !password) {
+    // No password: adding somebody *is* the invitation. They sign in with a
+    // link sent to the address added here, so a password would be a credential
+    // nothing ever checks.
+    if (!email || !name || !role) {
       return NextResponse.json(
-        { ok: false, error: 'missing_fields', message: 'Name, email, role, and password are required' },
+        { ok: false, error: 'missing_fields', message: 'Name, email and role are required' },
         { status: 400 }
       );
     }
@@ -103,7 +106,9 @@ export async function POST(request: Request) {
 
     const newId = `usr_${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}`;
     const now = new Date().toISOString();
-    const { hash, salt } = hashPassword(password);
+    // The column is NOT NULL and nothing reads it any more, so it gets a value
+    // no password can produce rather than a hash of something guessable.
+    const { hash, salt } = hashPassword(crypto.randomBytes(32).toString('hex'));
 
     await query(`
       INSERT INTO admin_users (
