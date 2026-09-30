@@ -497,6 +497,7 @@ export function getRequiredPermissionForPath(pathname: string): Permission | nul
   if (pathname.startsWith('/dashboard/map')) return 'map:view';
   if (pathname.startsWith('/dashboard/notifications')) return 'notifications:view';
   if (pathname.startsWith('/dashboard/versions')) return 'versions:view';
+  if (pathname.startsWith('/dashboard/app-versions')) return 'versions:view';
   if (pathname.startsWith('/dashboard/database')) return 'database:view';
   if (pathname.startsWith('/dashboard/logs')) return 'logs:view';
   if (pathname.startsWith('/dashboard/staging')) return 'staging:manage';

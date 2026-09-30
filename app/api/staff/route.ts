@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import crypto from 'node:crypto';
 import { query, queryOne } from '@/lib/db';
-import { getCurrentSession, hashPassword, ensureAdminTables } from '@/lib/auth';
+import { getCurrentSession, hashPassword, generatePassword, ensureAdminTables } from '@/lib/auth';
+import { mailAdminPassword } from '@/lib/admin-mail';
 import { hasPermission, ALL_ROLES, AdminRole, canManageRole } from '@/lib/rbac';
 
 export async function GET() {
@@ -106,14 +107,16 @@ export async function POST(request: Request) {
 
     const newId = `usr_${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}`;
     const now = new Date().toISOString();
-    // The column is NOT NULL and nothing reads it any more, so it gets a value
-    // no password can produce rather than a hash of something guessable.
-    const { hash, salt } = hashPassword(crypto.randomBytes(32).toString('hex'));
+    // Adding somebody issues them a password and mails it. They replace it on
+    // first sign-in, so this value has a life measured in minutes.
+    const issued = generatePassword();
+    const { hash, salt } = hashPassword(issued);
 
     await query(`
       INSERT INTO admin_users (
-        id, email, name, role, password_hash, salt, phone, status, created_at, updated_at, created_by
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9, $10)
+        id, email, name, role, password_hash, salt, phone, status, created_at, updated_at, created_by,
+        must_change_password
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9, $10, TRUE)
     `, [
       newId,
       cleanEmail,
@@ -141,9 +144,24 @@ export async function POST(request: Request) {
       ]
     );
 
+    // Mail the password. Saying whether it actually went matters: a password
+    // that was set but never delivered leaves somebody with an account they
+    // cannot reach and no way to know why.
+    const origin = request.headers.get('origin')
+      || `https://${request.headers.get('host') ?? 'admin.tapknock.generalquery.xyz'}`;
+    const mailed = await mailAdminPassword({
+      email: cleanEmail,
+      password: issued,
+      issuedBy: session.email,
+      origin,
+    });
+
     return NextResponse.json({
       ok: true,
-      message: 'Staff member created successfully',
+      password_mailed: mailed,
+      message: mailed
+        ? 'Staff member created. Their password is on its way to them.'
+        : 'Staff member created, but the password email did not send. Reset it to try again.',
       staff: {
         id: newId,
         email: cleanEmail,

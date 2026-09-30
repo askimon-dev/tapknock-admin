@@ -96,11 +96,25 @@ export async function middleware(request: NextRequest) {
   // the token is the credential for that single call.
   if (
     pathname.startsWith('/api/auth/login') ||
+    pathname.startsWith('/api/auth/change-password') ||
     pathname.startsWith('/api/auth/request-link') ||
     pathname.startsWith('/api/auth/link/') ||
     pathname.startsWith('/api/auth/device/')
   ) {
     return NextResponse.next();
+  }
+
+  // A password somebody else chose gets you to one screen and no further.
+  // Enforced here rather than in the page, because a change screen you can
+  // navigate away from is a suggestion.
+  if (isValid && sessionPayload?.mustChange && !pathname.startsWith('/change-password')) {
+    if (pathname.startsWith('/api')) {
+      return NextResponse.json(
+        { error: 'password_change_required', message: 'Set your own password first.' },
+        { status: 403 }
+      );
+    }
+    return NextResponse.redirect(new URL('/change-password', request.url));
   }
 
   // Protect API routes
@@ -155,6 +169,12 @@ export async function middleware(request: NextRequest) {
     }
 
     // App Releases management
+    if (pathname.startsWith('/api/app-versions') && method !== 'GET' && !hasPermission(activeRole, 'notifications:dispatch')) {
+      return NextResponse.json(
+        { error: 'forbidden', message: 'Sending update notices requires notifications:dispatch' },
+        { status: 403 }
+      );
+    }
     if (pathname.startsWith('/api/versions') && method !== 'GET' && !hasPermission(activeRole, 'versions:manage')) {
       return NextResponse.json(
         { error: 'forbidden', message: 'Publishing app releases requires versions:manage permission' },
@@ -218,5 +238,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/api/:path*', '/login'],
+  matcher: ['/dashboard/:path*', '/api/:path*', '/login', '/change-password'],
 };

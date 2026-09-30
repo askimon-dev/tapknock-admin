@@ -1,27 +1,51 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { authenticateStaff, ADMIN_COOKIE_NAME } from '@/lib/auth';
+import { getDefaultLandingPage } from '@/lib/rbac';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * There are no admin passwords any more.
+ * Email and password, and nothing else.
  *
- * This route used to accept an email and password, and would also accept the
- * master password *as the identifier* with no password at all — which, with a
- * default of `admin123`, meant anybody who read the login screen was a super
- * admin. The login screen listed six accounts and their passwords, and shipped
- * in an APK.
- *
- * Kept as an explicit, honest 410 rather than deleted, so an older admin build
- * gets told what happened instead of a bare 404.
+ * There is no master password, no sign-up and no forgotten-password path: the
+ * console is invite only, and a lost password is reset by a super admin who
+ * issues a new one. That is the whole recovery story, on purpose — the previous
+ * version accepted a master password *as the identifier*, defaulting to
+ * `admin123`.
  */
-export async function POST() {
-  return NextResponse.json(
-    {
-      error: 'password_login_removed',
-      message:
-        'Password sign-in has been removed. The console is invite only and signs in by '
-        + 'emailed link — update the admin app, or use the web console.',
-    },
-    { status: 410 }
-  );
+export async function POST(request: NextRequest) {
+  try {
+    const { email, password } = await request.json();
+    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || undefined;
+    const userAgent = request.headers.get('user-agent') || undefined;
+
+    const result = await authenticateStaff(email, password, clientIp, userAgent);
+    if ('error' in result) {
+      return NextResponse.json({ error: 'auth_failed', message: result.error }, { status: result.status });
+    }
+
+    const { user, token, mustChangePassword } = result;
+    const response = NextResponse.json({
+      ok: true,
+      user: { id: user.id, email: user.email, name: user.name, role: user.role },
+      token,
+      // A password somebody else chose gets you in and no further. The client
+      // is expected to make changing it the only thing available next.
+      must_change_password: mustChangePassword,
+      landing: mustChangePassword ? '/change-password' : getDefaultLandingPage(user.role),
+    });
+
+    response.cookies.set({
+      name: ADMIN_COOKIE_NAME,
+      value: token,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60,
+    });
+    return response;
+  } catch (err: any) {
+    return NextResponse.json({ error: 'server_error', message: err?.message ?? 'Sign-in failed' }, { status: 500 });
+  }
 }

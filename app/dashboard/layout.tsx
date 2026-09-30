@@ -52,6 +52,7 @@ const navItems: NavItem[] = [
   { label: 'Location Heatmap', href: '/dashboard/map', icon: MapPin, badge: 'Live', permission: 'map:view' },
   { label: 'Push Notifications', href: '/dashboard/notifications', icon: BellRing, badge: 'Crucial', permission: 'notifications:view' },
   { label: 'App Versions', href: '/dashboard/versions', icon: Smartphone, badge: 'Releases', permission: 'versions:view' },
+  { label: 'Who Has What', href: '/dashboard/app-versions', icon: Smartphone, badge: 'Adoption', permission: 'versions:view' },
   { label: 'Database Visualizer', href: '/dashboard/database', icon: Database, badge: 'Dev & SQL', permission: 'database:view' },
   { label: 'Live Server Logs', href: '/dashboard/logs', icon: Terminal, badge: 'Realtime', permission: 'logs:view' },
   { label: 'Staging Server', href: '/dashboard/staging', icon: Cpu, badge: 'On-Demand', permission: 'staging:manage' },
