@@ -64,6 +64,13 @@ export async function POST(req: NextRequest) {
   const response = NextResponse.json({
     ok: true,
     landing: getDefaultLandingPage(user.role as any),
+    // Handed back in the body as well as the cookie. The admin app authenticates
+    // with a bearer token and never sees cookies, so returning it only in the
+    // cookie left the app holding the old one — which still said the password
+    // had to change, so the middleware refused every call it made. The symptom
+    // was "Failed to load metrics (403)" until you signed out and in again.
+    token,
+    user: { id: user.id, email: user.email, name: user.name, role: user.role },
   });
   response.cookies.set({
     name: ADMIN_COOKIE_NAME,

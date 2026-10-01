@@ -101,6 +101,9 @@ const emptyDraft = {
   actual: '',
   app_version: '',
   tags: '',
+  // Optional throughout. An issue without a picture is still a perfectly good
+  // issue; one with a picture is usually a much faster one to act on.
+  attachments: [] as { url: string; file_name: string }[],
 };
 
 /* ------------------------------------------------------------------ page */
@@ -116,6 +119,51 @@ export default function IssuesPage() {
   const [filterKind, setFilterKind] = useState<string>('all');
   const [filterArea, setFilterArea] = useState<string>('all');
   const [filterAgent, setFilterAgent] = useState<string>('all');
+
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  /**
+   * Attaches a screenshot.
+   *
+   * Read as base64 in the browser rather than posted as a form: the API's
+   * upload endpoint takes either, and JSON travels through the panel's proxy
+   * without needing a multipart parser on the way.
+   */
+  const attachScreenshot = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    setUploadError(null);
+    try {
+      for (const file of Array.from(files)) {
+        if (!file.type.startsWith('image/')) {
+          setUploadError('Screenshots only.');
+          continue;
+        }
+        const base64: string = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result).split(',')[1] ?? '');
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        const res = await fetch('/api/issues/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ base64, file_name: file.name, mime_type: file.type }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Upload failed');
+        setDraft((d) => ({
+          ...d,
+          attachments: [...d.attachments, { url: data.attachment.url, file_name: file.name }],
+        }));
+      }
+    } catch (err: any) {
+      setUploadError(err?.message ?? 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<Issue | null>(null);
@@ -174,6 +222,7 @@ export default function IssuesPage() {
       actual: issue.actual || '',
       app_version: issue.app_version || '',
       tags: (issue.tags || []).join(', '),
+      attachments: (issue.attachments as any) || [],
     });
     setEditorOpen(true);
   };
@@ -187,6 +236,7 @@ export default function IssuesPage() {
         ...draft,
         assigned_ai: draft.assigned_ai || null,
         tags: draft.tags.split(',').map((t) => t.trim()).filter(Boolean),
+        attachments: draft.attachments,
       };
       const res = await fetch(
         editing ? `/api/issues/${editing.issue_number}` : '/api/issues',
@@ -555,6 +605,48 @@ export default function IssuesPage() {
                   placeholder="vivo, ringing"
                   className="w-full bg-surface-darker border border-surface-border rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-brand-500" />
               </Field>
+            </div>
+
+            {/* Screenshots — optional, and said so, because most issues will not have one. */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                Screenshots <span className="text-slate-500 font-normal">(optional)</span>
+              </label>
+
+              {draft.attachments.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {draft.attachments.map((a, i) => (
+                    <div key={a.url} className="relative group">
+                      <a href={a.url} target="_blank" rel="noreferrer" title={a.file_name}>
+                        <img src={a.url} alt={a.file_name}
+                          className="w-20 h-20 object-cover rounded-lg border border-surface-border" />
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => setDraft({
+                          ...draft,
+                          attachments: draft.attachments.filter((_, j) => j !== i),
+                        })}
+                        className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white text-[11px] leading-none opacity-0 group-hover:opacity-100 transition"
+                        aria-label={`Remove ${a.file_name}`}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                disabled={uploading}
+                onChange={(e) => { attachScreenshot(e.target.files); e.target.value = ''; }}
+                className="w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-surface-darker file:text-brand-300 hover:file:bg-surface-border"
+              />
+              {uploading && <p className="text-[11px] text-slate-400 mt-1.5">Uploading…</p>}
+              {uploadError && <p className="text-[11px] text-red-400 mt-1.5">{uploadError}</p>}
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2">

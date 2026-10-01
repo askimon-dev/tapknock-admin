@@ -91,15 +91,12 @@ export async function middleware(request: NextRequest) {
 
   // Public / auth endpoints.
   //
-  // Signing in cannot require being signed in. `request-link` is where somebody
-  // with no session asks for one, and `link/:token` is where they spend it —
-  // the token is the credential for that single call.
+  // Signing in cannot require being signed in, and neither can replacing a
+  // password you were sent — that route checks the current password itself,
+  // which is the credential for that call.
   if (
     pathname.startsWith('/api/auth/login') ||
-    pathname.startsWith('/api/auth/change-password') ||
-    pathname.startsWith('/api/auth/request-link') ||
-    pathname.startsWith('/api/auth/link/') ||
-    pathname.startsWith('/api/auth/device/')
+    pathname.startsWith('/api/auth/change-password')
   ) {
     return NextResponse.next();
   }
